@@ -1,15 +1,20 @@
 import React from 'react';
 import { useGameStore } from '../store/useGameStore';
+import { useAudio } from '../hooks/useAudio';
 import gsap from 'gsap';
 
 export const GameHUD = () => {
   const { coins, energy, currentLevel, inventory } = useGameStore();
+  const { playSFX } = useAudio();
 
   const toolImages = {
+    financial_compass: '/icon_map.jpg', // Reused map asset
+    income_rope: '/icon_rope.jpg', // Reused rope asset
+    budget_planner: '/icon_rope.jpg',
     emergency_shield: '/icon_shield.jpg',
     compound_sword: '/icon_sword.jpg',
-    budget_planner: '/icon_rope.jpg',
-    diversification_map: '/icon_map.jpg'
+    debt_axe: '/icon_sword.jpg', // Reused sword asset
+    savings_beacon: '/icon_shield.jpg' // Reused shield asset
   };
 
   const styles = {
@@ -99,6 +104,7 @@ export const GameHUD = () => {
     if (coins > prevCoins.current) {
       const diff = coins - prevCoins.current;
       setFloatText(`+${diff}`);
+      playSFX('coin');
       
       if (coinIconRef.current) {
         gsap.fromTo(coinIconRef.current, 
@@ -112,7 +118,7 @@ export const GameHUD = () => {
     prevCoins.current = coins;
   }, [coins]);
 
-  const inventorySlots = [0, 1, 2, 3].map(i => inventory[i]);
+  const inventorySlots = [0, 1, 2, 3, 4, 5].map(i => inventory[i]);
 
   return (
     <div style={styles.container}>

@@ -5,6 +5,25 @@ import gsap from 'gsap';
 export const Onboarding = () => {
   const { hasCompletedOnboarding, completeOnboarding } = useGameStore();
   const [step, setStep] = useState(0);
+  const [showContent, setShowContent] = useState(false);
+
+  // Wait for the mountain cinematic pan to finish (2.5s)
+  React.useEffect(() => {
+    if (!hasCompletedOnboarding) {
+      const timer = setTimeout(() => setShowContent(true), 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [hasCompletedOnboarding]);
+
+  // Bouncy entrance animation once shown
+  React.useEffect(() => {
+    if (showContent) {
+      gsap.fromTo('.onboarding-container', 
+        { scale: 0.3, opacity: 0 }, 
+        { scale: 1, opacity: 1, duration: 1, ease: "elastic.out(1, 0.5)" }
+      );
+    }
+  }, [showContent]);
 
   if (hasCompletedOnboarding) return null;
 
@@ -22,14 +41,14 @@ export const Onboarding = () => {
     overlay: {
       position: 'fixed',
       top: 0, left: 0, right: 0, bottom: 0,
-      backgroundColor: 'rgba(15, 23, 42, 0.85)',
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
       zIndex: 400,
-      backdropFilter: 'blur(10px)'
+      pointerEvents: 'none' // Allow clicks to pass through empty space if needed, though the container should block them
     },
     container: {
+      pointerEvents: 'auto', // Re-enable pointer events for the modal itself
       background: 'linear-gradient(to bottom, #78350f, #451a03)', // Wooden texture feel
       border: '6px solid #290f01',
       borderRadius: '24px',
@@ -95,16 +114,18 @@ export const Onboarding = () => {
 
   return (
     <div style={styles.overlay}>
-      <div className="onboarding-container" style={styles.container}>
-        <div style={styles.innerPanel}>
-          <div style={styles.sherpaIcon}>🏔️</div>
-          
-          {step === 0 && (
-            <>
-              <div style={styles.title}>Welcome to the Climb.</div>
+      {showContent && (
+        <div className="onboarding-container" style={styles.container}>
+          <div style={styles.innerPanel}>
+            <div style={styles.sherpaIcon}>🏔️</div>
+            
+            {step === 0 && (
+              <>
+              <div style={styles.title}>Namaste, Climber.</div>
               <div style={styles.subtitle}>
-                I'm your guide. Your financial journey is a mountain, and every good habit pushes you closer to the summit. 
-                Let's figure out where you are starting from.
+                I am your Sherpa, your guide for this expedition. The True Harbor mountain is steep, but every good financial habit pushes you closer to the summit. 
+                <br /><br />
+                Before we begin, we must figure out where you are starting from.
               </div>
               <div style={styles.buttonContainer}>
                 <button 
@@ -144,6 +165,7 @@ export const Onboarding = () => {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 };

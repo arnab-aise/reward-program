@@ -3,15 +3,8 @@ import gsap from 'gsap';
 import { useGameStore } from '../store/useGameStore';
 
 export const WeatherOverlay = () => {
-  const { currentLevel } = useGameStore();
+  const { weatherState } = useGameStore();
   const canvasRef = useRef(null);
-  const [weatherType, setWeatherType] = useState('sunrise'); // 'sunrise', 'fog', 'blizzard'
-
-  useEffect(() => {
-    if (currentLevel <= 1) setWeatherType('sunrise');
-    else if (currentLevel <= 3) setWeatherType('fog');
-    else setWeatherType('blizzard');
-  }, [currentLevel]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -42,7 +35,7 @@ export const WeatherOverlay = () => {
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      if (weatherType === 'sunrise') {
+      if (weatherState === 'sunrise') {
         // Sunrise: glowing motes
         particles.forEach(p => {
           ctx.fillStyle = `rgba(253, 230, 138, ${p.opacity * 0.5})`;
@@ -55,7 +48,7 @@ export const WeatherOverlay = () => {
           if (p.y < 0) p.y = canvas.height;
         });
       } 
-      else if (weatherType === 'fog') {
+      else if (weatherState === 'fog') {
         // Fog: Slow horizontal moving mist particles
         particles.forEach(p => {
           ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity * 0.2})`;
@@ -67,8 +60,8 @@ export const WeatherOverlay = () => {
           if (p.x > canvas.width) p.x = 0;
         });
       }
-      else if (weatherType === 'blizzard') {
-        // Blizzard: Fast diagonal snow
+      else if (weatherState === 'storm') {
+        // Storm: Fast diagonal snow/rain
         particles.forEach(p => {
           ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity})`;
           ctx.beginPath();
@@ -93,11 +86,11 @@ export const WeatherOverlay = () => {
     const tintColors = {
       sunrise: 'rgba(252, 211, 77, 0.1)',
       fog: 'rgba(148, 163, 184, 0.4)',
-      blizzard: 'rgba(15, 23, 42, 0.6)'
+      storm: 'rgba(15, 23, 42, 0.7)'
     };
 
     gsap.to('.weather-tint', {
-      backgroundColor: tintColors[weatherType],
+      backgroundColor: tintColors[weatherState] || tintColors.sunrise,
       duration: 2
     });
 
@@ -105,7 +98,7 @@ export const WeatherOverlay = () => {
       window.removeEventListener('resize', resize);
       cancelAnimationFrame(animationId);
     };
-  }, [weatherType]);
+  }, [weatherState]);
 
   return (
     <>

@@ -52,14 +52,14 @@ export const SherpaGuide = ({ cx, cy }) => {
     <g ref={containerRef} transform={`translate(${cx}, ${cy})`}>
       
       {/* Dialogue Bubble */}
-      <foreignObject x="-200" y="-200" width="220" height="150" ref={bubbleRef} style={{ overflow: 'visible' }}>
+      <foreignObject x="-300" y="-300" width="320" height="280" ref={bubbleRef} style={{ overflow: 'visible' }}>
         <div style={{
           backgroundColor: 'rgba(254, 243, 199, 0.95)',
           border: '3px solid #b45309',
           borderRadius: '16px 16px 16px 0',
-          padding: '10px 15px',
+          padding: '12px 18px',
           color: '#451a03',
-          fontSize: '14px',
+          fontSize: '15px',
           fontWeight: 'bold',
           lineHeight: '1.4',
           boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
@@ -67,7 +67,8 @@ export const SherpaGuide = ({ cx, cy }) => {
           bottom: '20px',
           right: '10px',
           width: 'max-content',
-          maxWidth: '200px'
+          maxWidth: '260px',
+          boxSizing: 'border-box'
         }}>
           {displayedMessage}
           <div style={{

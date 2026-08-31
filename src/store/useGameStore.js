@@ -1,17 +1,25 @@
 import { create } from 'zustand';
 
 const initialState = {
-  currentLevel: 0, // Highest unlocked level (0 to 4)
-  stageStars: { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 },
+  unlockedNodes: ['base_camp'],
+  completedNodes: [],
+  nodeStars: {},
+  weatherState: 'sunrise', // 'sunrise', 'fog', 'storm'
+  hasCollapsed: false,
+  showShop: false,
   coins: 150,
   energy: 5,
-  activeStageModal: null, // The level index currently being viewed/played
+  activeStageModal: null, // The node ID currently being viewed/played
   unlockedRewards: [],
   financialHealthScore: 100,
   hasCompletedOnboarding: false,
   playerState: 'idle', // 'idle' | 'walk' | 'jump' | 'celebrate'
   sherpaMessage: "Welcome, traveler. Tap a glowing stage node to begin your ascent.",
-  inventory: ['budget_planner'], // tools player has collected
+  inventory: ['financial_compass'], // tools player has collected
+  budgetCreated: false,
+  emergencyFundStatus: 0,
+  debtStrategyChosen: null,
+  savingsTarget: 0,
 };
 
 export const useGameStore = create((set) => ({
@@ -25,33 +33,66 @@ export const useGameStore = create((set) => ({
 
   completeOnboarding: () => set({ hasCompletedOnboarding: true }),
 
-  openStageModal: (level) => set({ activeStageModal: level }),
+  openStageModal: (nodeId) => set({ activeStageModal: nodeId }),
   
   closeStageModal: () => set({ activeStageModal: null }),
 
-  completeStage: (level, starsEarned, coinReward) => set((state) => {
-    const currentStars = state.stageStars[level] || 0;
-    const bestStars = Math.max(currentStars, starsEarned);
+  completeNode: (nodeId, starsEarned, coinReward, nextNodesToUnlock = []) => set((state) => {
+    const isCompleted = state.completedNodes.includes(nodeId);
+    if (isCompleted) return state; 
     
-    // Unlock next level if this is the highest level and we got at least 1 star
-    const nextLevel = (level === state.currentLevel && starsEarned > 0 && level < 4) 
-      ? state.currentLevel + 1 
-      : state.currentLevel;
-
+    const hasBackpack = state.inventory.includes('golden_backpack');
+    const bonusCoins = hasBackpack ? Math.floor(coinReward * 0.2) : 0;
+    
+    const hasTent = state.inventory.includes('reinforced_tent');
+    const energyRecovery = hasTent ? 1 : 0;
+    
     return {
-      stageStars: { ...state.stageStars, [level]: bestStars },
-      currentLevel: nextLevel,
-      coins: state.coins + coinReward,
-      energy: Math.max(0, state.energy - 1),
+      nodeStars: { ...state.nodeStars, [nodeId]: Math.max(state.nodeStars[nodeId] || 0, starsEarned) },
+      completedNodes: [...new Set([...state.completedNodes, nodeId])],
+      unlockedNodes: [...new Set([...state.unlockedNodes, ...nextNodesToUnlock])],
+      coins: state.coins + coinReward + bonusCoins,
+      energy: Math.min(10, state.energy + energyRecovery),
       activeStageModal: null // Close modal on complete
     };
   }),
+
+  setShowShop: (show) => set({ showShop: show }),
+
+  buyGear: (gearId, cost) => set((state) => {
+    if (state.coins >= cost && !state.inventory.includes(gearId)) {
+      return {
+        coins: state.coins - cost,
+        inventory: [...state.inventory, gearId]
+      };
+    }
+    return state;
+  }),
+
+  deductEnergy: (amount) => set((state) => ({ energy: Math.max(0, state.energy - amount) })),
+
+  triggerCollapse: () => set({ hasCollapsed: true, activeStageModal: null }),
+
+  recoverFromCollapse: (energyRestored, coinCost, resetProgress) => set((state) => ({
+    hasCollapsed: false,
+    energy: state.energy + energyRestored,
+    coins: Math.max(0, state.coins - coinCost),
+    completedNodes: resetProgress ? [] : state.completedNodes,
+    unlockedNodes: resetProgress ? ['base_camp'] : state.unlockedNodes
+  })),
+
+  setWeatherState: (weather) => set({ weatherState: weather }),
 
   addCoins: (amount) => set((state) => ({ coins: state.coins + amount })),
   
   unlockReward: (rewardId) => set((state) => ({ 
     unlockedRewards: [...new Set([...state.unlockedRewards, rewardId])] 
   })),
+
+  setBudgetCreated: (status) => set({ budgetCreated: status }),
+  updateEmergencyFund: (amount) => set({ emergencyFundStatus: amount }),
+  setDebtStrategy: (strategy) => set({ debtStrategyChosen: strategy }),
+  setSavingsTarget: (target) => set({ savingsTarget: target }),
 
   resetGame: () => set(initialState),
 }));

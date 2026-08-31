@@ -6,6 +6,8 @@ import { WeatherOverlay } from './components/WeatherOverlay';
 import { RewardCard } from './components/RewardCard';
 import { Onboarding } from './components/Onboarding';
 import { StageModal } from './components/StageModal';
+import { CollapseModal } from './components/CollapseModal';
+import { SherpaShopModal } from './components/SherpaShopModal';
 import './App.css';
 
 class ErrorBoundary extends React.Component {
@@ -37,34 +39,40 @@ function App() {
       <div className="app-container">
         <WeatherOverlay />
         
-        {/* Playable Game UI */}
-        <GameHUD />
+        {/* The Map */}
         <MountainPath />
-        <StageModal />
-        <Onboarding />
-        <RewardCard />
-        
-        {/* Dev Settings Toggle */}
-        <button 
-          onClick={() => setShowDebug(!showDebug)}
-          style={{
-            position: 'absolute',
-            bottom: '20px',
-            right: '20px',
-            background: 'rgba(0,0,0,0.5)',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '50%',
-            width: '40px',
-            height: '40px',
-            cursor: 'pointer',
-            zIndex: 9999
-          }}
-        >
-          Dev
-        </button>
 
-        {showDebug && <DebugPanel />}
+        {/* UI Layer constrained to mobile-like width */}
+        <div className="ui-wrapper">
+          <GameHUD />
+          <StageModal />
+          <CollapseModal />
+          <SherpaShopModal />
+          <Onboarding />
+          <RewardCard />
+          
+          {/* Dev Settings Toggle */}
+          <button 
+            onClick={() => setShowDebug(!showDebug)}
+            style={{
+              position: 'absolute',
+              bottom: '20px',
+              right: '20px',
+              background: 'rgba(0,0,0,0.5)',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '50%',
+              width: '40px',
+              height: '40px',
+              cursor: 'pointer',
+              zIndex: 9999
+            }}
+          >
+            Dev
+          </button>
+
+          {showDebug && <DebugPanel />}
+        </div>
       </div>
     </ErrorBoundary>
   );

@@ -16,17 +16,30 @@ export const DialogueScreen = ({ script, onComplete }) => {
     setIsTyping(true);
     let i = 0;
     
-    // Slight bounce for the active speaker
-    const speakerClass = currentLine.speaker === 'Sherpa' ? '.sherpa-portrait' : '.mountaineer-portrait';
-    gsap.fromTo(speakerClass, 
-      { y: 10 }, 
-      { y: 0, duration: 0.3, ease: 'power2.out' }
-    );
-    
-    // Dim the non-speaker
-    const nonSpeakerClass = currentLine.speaker === 'Sherpa' ? '.mountaineer-portrait' : '.sherpa-portrait';
-    gsap.to(nonSpeakerClass, { filter: 'brightness(0.5)', duration: 0.3 });
-    gsap.to(speakerClass, { filter: 'brightness(1)', duration: 0.3 });
+    // Cinematic Visual Novel animations
+    const isSherpa = currentLine.speaker === 'Sherpa';
+    const activeClass = isSherpa ? '.sherpa-portrait' : '.mountaineer-portrait';
+    const inactiveClass = isSherpa ? '.mountaineer-portrait' : '.sherpa-portrait';
+
+    // Bring active speaker to foreground
+    gsap.to(activeClass, { 
+      filter: 'brightness(1) saturate(1.1) drop-shadow(0 0 20px rgba(0,0,0,0.8))', 
+      scale: 1, 
+      zIndex: 10,
+      opacity: 1,
+      duration: 0.4, 
+      ease: 'power2.out' 
+    });
+
+    // Push inactive speaker to background
+    gsap.to(inactiveClass, { 
+      filter: 'brightness(0.4) saturate(0.5) blur(2px)', 
+      scale: 0.85, 
+      zIndex: 5,
+      opacity: 0.8,
+      duration: 0.4,
+      ease: 'power2.inOut'
+    });
 
     const intervalId = setInterval(() => {
       setDisplayedText(currentLine.text.substring(0, i + 1));
@@ -60,82 +73,116 @@ export const DialogueScreen = ({ script, onComplete }) => {
   const styles = {
     overlay: {
       position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      backgroundColor: 'transparent',
       display: 'flex', flexDirection: 'column',
       justifyContent: 'flex-end',
       zIndex: 400,
       cursor: 'pointer'
     },
+    fogLayer: {
+      position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+      backgroundImage: 'url(/weather_fog.png)',
+      backgroundSize: 'cover',
+      opacity: 0.4,
+      animation: 'drift 60s linear infinite',
+      pointerEvents: 'none',
+      zIndex: 1
+    },
     portraitsContainer: {
+      position: 'absolute',
+      bottom: '15vh', // Sit behind the dialogue box
+      left: 0,
+      width: '100%',
+      height: '80vh',
       display: 'flex',
       justifyContent: 'space-between',
-      alignItems: 'flex-end',
-      width: '100%',
-      maxWidth: '800px',
-      margin: '0 auto',
-      padding: '0 20px',
-      height: '60vh'
+      pointerEvents: 'none'
     },
-    portraitWrap: {
-      width: '45%',
-      maxWidth: '350px',
-      border: '6px solid #b45309',
-      borderRadius: '20px 20px 0 0',
-      overflow: 'hidden',
-      boxShadow: '0 20px 50px rgba(0,0,0,0.8)',
-      borderBottom: 'none'
-    },
-    portraitImg: {
-      width: '100%',
+    portraitWrap: (side) => ({
+      position: 'absolute',
+      bottom: '-50px',
+      [side]: '-5%',
+      width: '55%',
+      maxWidth: '600px',
       height: '100%',
-      objectFit: 'cover',
-      display: 'block'
-    },
+      transformOrigin: 'bottom center',
+      display: 'flex',
+      alignItems: 'flex-end',
+      justifyContent: side === 'left' ? 'flex-start' : 'flex-end',
+      filter: 'brightness(0.4) saturate(0.5)', // start dimmed
+      opacity: 0,
+      scale: 0.85
+    }),
+    portraitImg: (side) => ({
+      height: '100%',
+      objectFit: 'contain',
+      objectPosition: 'bottom',
+      transform: side === 'right' ? 'scaleX(-1)' : 'none', // flip mountaineer to face sherpa
+      maskImage: 'linear-gradient(to top, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 20%)',
+      WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 20%)'
+    }),
     dialogueBox: {
       backgroundImage: 'url(/ui_wooden_board.jpg)',
       backgroundSize: '100% 100%',
-      width: '100%',
-      height: '35vh',
-      padding: '40px 60px',
-      borderTop: '6px solid #92400e',
-      boxShadow: '0 -20px 50px rgba(0,0,0,0.9)',
-      position: 'relative'
+      width: '95%',
+      maxWidth: '1200px',
+      margin: '0 auto 20px auto',
+      height: 'auto',
+      minHeight: '25vh',
+      maxHeight: '40vh',
+      padding: '50px 80px',
+      boxShadow: '0 -10px 40px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,0,0,0.5)',
+      position: 'relative',
+      zIndex: 20,
+      boxSizing: 'border-box',
+      overflowY: 'auto'
     },
     speakerName: {
-      fontSize: '28px',
+      fontSize: 'clamp(24px, 4vw, 36px)',
       fontFamily: "'Rowdies', cursive",
       color: currentLine.speaker === 'Sherpa' ? '#fde047' : '#38bdf8',
-      marginBottom: '15px',
-      textShadow: '2px 2px 4px rgba(0,0,0,0.8)'
+      marginBottom: '10px',
+      textShadow: '2px 2px 4px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,0.5)',
+      borderBottom: '2px solid rgba(255,255,255,0.1)',
+      paddingBottom: '10px'
     },
     dialogueText: {
-      fontSize: '22px',
+      fontSize: 'clamp(18px, 3vw, 24px)',
       color: '#f8fafc',
       lineHeight: '1.6',
       fontWeight: 'bold',
-      textShadow: '1px 1px 3px rgba(0,0,0,0.8)'
+      textShadow: '2px 2px 4px rgba(0,0,0,0.9)',
+      fontFamily: "'Nunito', sans-serif"
     },
     continueIndicator: {
       position: 'absolute',
-      bottom: '20px',
-      right: '40px',
+      bottom: '15px',
+      right: '25px',
       color: '#fbbf24',
-      fontSize: '18px',
+      fontSize: '16px',
+      fontWeight: 'bold',
       animation: 'pulse 1s infinite'
     }
   };
 
   return (
     <div className="dialogue-overlay" style={styles.overlay} onClick={handleNext}>
+      <div style={styles.fogLayer}></div>
+      <style>{`
+        @keyframes drift {
+          from { background-position: 0 0; }
+          to { background-position: 1000px 0; }
+        }
+      `}</style>
       <div style={styles.portraitsContainer}>
         {/* Sherpa Left */}
-        <div className="sherpa-portrait" style={styles.portraitWrap}>
-          <img src="/portrait_sherpa.jpg" alt="Sherpa" style={styles.portraitImg} />
+        <div className="sherpa-portrait" style={styles.portraitWrap('left')}>
+          <img src="/portrait_sherpa.jpg" alt="Sherpa" style={styles.portraitImg('left')} />
         </div>
         
         {/* Mountaineer Right */}
-        <div className="mountaineer-portrait" style={styles.portraitWrap}>
-          <img src="/portrait_mountaineer.jpg" alt="You" style={styles.portraitImg} />
+        <div className="mountaineer-portrait" style={styles.portraitWrap('right')}>
+          <img src="/portrait_mountaineer.jpg" alt="You" style={styles.portraitImg('right')} />
         </div>
       </div>
       

@@ -34,7 +34,8 @@ h1, h2, h3, .game-title {
 
 .mountain-container {
   width: 100%;
-  max-width: 800px;
+  height: 100%;
+  position: relative;
   height: 100%;
   position: relative;
   overflow-y: auto;
@@ -45,6 +46,23 @@ h1, h2, h3, .game-title {
 
 .mountain-container::-webkit-scrollbar {
   display: none; /* Chrome/Safari */
+}
+
+/* UI Wrapper for Desktop */
+.ui-wrapper {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 600px;
+  height: 100%;
+  pointer-events: none; /* Let clicks pass through to map where there is no UI */
+  z-index: 50;
+}
+
+.ui-wrapper > * {
+  pointer-events: auto; /* Re-enable clicks for UI elements */
 }
 
 .mountain-svg {

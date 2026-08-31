@@ -2,13 +2,13 @@ import React, { useRef, useEffect } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import gsap from 'gsap';
 
-export const Checkpoint = ({ cx, cy, label, level, isUnlocked, isCurrent }) => {
-  const { openStageModal, stageStars } = useGameStore();
+export const Checkpoint = ({ cx, cy, label, id, isUnlocked, isCurrent }) => {
+  const { openStageModal, nodeStars } = useGameStore();
   const nodeRef = useRef(null);
   const pulseRef = useRef(null);
   const crystalRef = useRef(null);
   
-  const stars = stageStars[level] || 0;
+  const stars = nodeStars[id] || 0;
   const isLocked = !isUnlocked && !isCurrent;
 
   useEffect(() => {
@@ -48,7 +48,7 @@ export const Checkpoint = ({ cx, cy, label, level, isUnlocked, isCurrent }) => {
     gsap.timeline()
       .to(nodeRef.current, { scale: 0.8, duration: 0.1 })
       .to(nodeRef.current, { scale: 1.1, duration: 0.1 })
-      .to(nodeRef.current, { scale: 1, duration: 0.1, onComplete: () => openStageModal(level) });
+      .to(nodeRef.current, { scale: 1, duration: 0.1, onComplete: () => openStageModal(id) });
   };
 
   const colors = {
@@ -70,7 +70,7 @@ export const Checkpoint = ({ cx, cy, label, level, isUnlocked, isCurrent }) => {
       style={{ cursor: isLocked ? 'not-allowed' : 'pointer' }}
     >
       <defs>
-        <filter id={`glow-${level}`} x="-50%" y="-50%" width="200%" height="200%">
+        <filter id={`glow-${id}`} x="-50%" y="-50%" width="200%" height="200%">
           <feGaussianBlur stdDeviation="8" result="blur" />
           <feComposite in="SourceGraphic" in2="blur" operator="over" />
         </filter>
@@ -85,7 +85,7 @@ export const Checkpoint = ({ cx, cy, label, level, isUnlocked, isCurrent }) => {
           ref={pulseRef}
           cx="0" cy="0" r="30" 
           fill="none" stroke={stateColor.glow} strokeWidth="6" 
-          filter={`url(#glow-${level})`}
+          filter={`url(#glow-${id})`}
         />
       )}
 
@@ -93,7 +93,7 @@ export const Checkpoint = ({ cx, cy, label, level, isUnlocked, isCurrent }) => {
         <g ref={crystalRef}>
           {/* Floating Glowing Crystal */}
           {(!isLocked) && (
-            <circle cx="0" cy="0" r="35" fill={stateColor.glow} filter={`url(#glow-${level})`} opacity="0.4" />
+            <circle cx="0" cy="0" r="35" fill={stateColor.glow} filter={`url(#glow-${id})`} opacity="0.4" />
           )}
           
           {/* Crystal Shape */}
@@ -117,7 +117,7 @@ export const Checkpoint = ({ cx, cy, label, level, isUnlocked, isCurrent }) => {
           fontFamily="'Rowdies', cursive"
           style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}
         >
-          {isLocked ? "🔒" : (level + 1)}
+          {isLocked ? "🔒" : "✦"}
         </text>
 
         {/* Stars Container (If Completed) */}
