@@ -34,39 +34,37 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <div className="desktop-wrapper">
-        <div className="app-container">
-          <WeatherOverlay />
-          
-          {/* Playable Game UI */}
-          <GameHUD />
-          <MountainPath />
-          <StageModal />
-          <Onboarding />
-          <RewardCard />
-          
-          {/* Dev Settings Toggle */}
-          <button 
-            onClick={() => setShowDebug(!showDebug)}
-            style={{
-              position: 'absolute',
-              bottom: '20px',
-              right: '20px',
-              background: 'rgba(0,0,0,0.5)',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '50%',
-              width: '40px',
-              height: '40px',
-              cursor: 'pointer',
-              zIndex: 9999
-            }}
-          >
-            Dev
-          </button>
+      <div className="app-container">
+        <WeatherOverlay />
+        
+        {/* Playable Game UI */}
+        <GameHUD />
+        <MountainPath />
+        <StageModal />
+        <Onboarding />
+        <RewardCard />
+        
+        {/* Dev Settings Toggle */}
+        <button 
+          onClick={() => setShowDebug(!showDebug)}
+          style={{
+            position: 'absolute',
+            bottom: '20px',
+            right: '20px',
+            background: 'rgba(0,0,0,0.5)',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '50%',
+            width: '40px',
+            height: '40px',
+            cursor: 'pointer',
+            zIndex: 9999
+          }}
+        >
+          Dev
+        </button>
 
-          {showDebug && <DebugPanel />}
-        </div>
+        {showDebug && <DebugPanel />}
       </div>
     </ErrorBoundary>
   );
