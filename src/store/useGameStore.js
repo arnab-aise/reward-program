@@ -1,6 +1,11 @@
 import { create } from 'zustand';
 
 const initialState = {
+  employeeId: null, // Set from URL param
+  financialData: null, // Derived metrics from dashboard-snapshot
+  rawSnapshot: null, // The raw snapshot object
+  isFinanceLoading: true,
+  hasNoData: false,
   unlockedNodes: ['base_camp'],
   completedNodes: [],
   nodeStars: {},
@@ -28,6 +33,11 @@ export const useGameStore = create((set) => ({
   addTool: (toolId) => set((state) => ({ inventory: [...new Set([...state.inventory, toolId])] })),
 
   setSherpaMessage: (msg) => set({ sherpaMessage: msg }),
+
+  setEmployeeId: (id) => set({ employeeId: id }),
+
+  setFinancialData: (metrics, snapshot) => set({ financialData: metrics, rawSnapshot: snapshot }),
+  setFinanceStatus: (isLoading, hasNoData) => set({ isFinanceLoading: isLoading, hasNoData: hasNoData }),
 
   setPlayerState: (state) => set({ playerState: state }),
 

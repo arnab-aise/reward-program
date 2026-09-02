@@ -157,7 +157,14 @@ export const MountainPath = () => {
             return renderPath(d, state, key);
           })}
 
-          {/* Render Obstacles */}
+          {/* Render Obstacles & Difficulties */}
+          {/* Black Oval Difficulty (Income Valley -> Budget Ridge) */}
+          <g transform="translate(475, 1750)">
+            <ellipse cx="0" cy="0" rx="60" ry="25" fill="#0f172a" stroke="#020617" strokeWidth="3" filter="drop-shadow(0 0 15px rgba(0,0,0,0.9))" />
+            <ellipse cx="0" cy="0" rx="45" ry="15" fill="#000" />
+            {/* Subtle warning particles/swirls could go here, for now keeping it a pure black hole shape */}
+          </g>
+
           {/* Rockslide */}
           {!inventory.includes('emergency_dynamite') && (
             <g transform="translate(500, 1150)">

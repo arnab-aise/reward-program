@@ -4,12 +4,16 @@ import gsap from 'gsap';
 import { DialogueScreen } from './DialogueScreen';
 import { BudgetChallenge } from './BudgetChallenge';
 import { DebtChallenge } from './DebtChallenge';
+import { TypewriterText } from './TypewriterText';
+import './ConversationalUI.css';
+import { SherpaChat } from './SherpaChat';
 import { useAudio } from '../hooks/useAudio';
+import { formatCurrency } from '../hooks/useFinancialData';
 
 export const StageModal = () => {
-  const { activeStageModal, closeStageModal, completeNode, energy, inventory, addTool, setSherpaMessage, setBudgetCreated, setDebtStrategy, setWeatherState } = useGameStore();
+  const { activeStageModal, closeStageModal, completeNode, energy, inventory, addTool, setSherpaMessage, setBudgetCreated, setDebtStrategy, setWeatherState, financialData } = useGameStore();
   const { playSFX } = useAudio();
-  const [encounterState, setEncounterState] = useState('dialogue'); // 'dialogue', 'intro', 'challenge', 'resolution'
+  const [encounterState, setEncounterState] = useState('dialogue'); // 'dialogue', 'sherpa_chat', 'intro', 'challenge', 'resolution'
   const [outcome, setOutcome] = useState(null);
 
   useEffect(() => {
@@ -20,60 +24,130 @@ export const StageModal = () => {
 
   if (activeStageModal === null) return null;
 
+  // Helper: get data or safe defaults
+  const fd = financialData || {};
+  const income = fd.income || 0;
+  const incomeThisMonth = fd.incomeThisMonth || 0;
+  const incomeLastMonth = fd.incomeLastMonth || 0;
+  const incomeTrend = fd.incomeTrend || 'stable';
+  const tdi = fd.tdi || 0;
+  const totalBills = fd.totalAmountDue || 0;
+  const overdueBills = fd.overdueBillsCount || 0;
+  const budgetHealth = fd.budgetHealth || 'no_budget';
+  const totalBudget = fd.totalBudget || 0;
+  const totalSpent = fd.totalSpent || 0;
+  const salaryBillRatio = fd.salaryBillRatio || 0;
+  const hasData = !!financialData;
+
+  // --- Build Dynamic Encounters ---
   const encounters = {
     base_camp: {
       title: "Base Camp: True Harbor Snapshot",
       script: [
-        { speaker: "Sherpa", text: "Welcome to the Financial Ascent. The mountain is treacherous, but the True Harbor platform will be your guide." },
+        { speaker: "Sherpa", text: hasData
+          ? `Welcome, climber. Your current income is ${formatCurrency(income)}. True Harbor has mapped your financial terrain.`
+          : "Welcome to the Financial Ascent. The mountain is treacherous, but the True Harbor platform will be your guide." },
         { speaker: "You", text: "I'm ready. Where do we begin?" },
-        { speaker: "Sherpa", text: "First, you must understand your current position. Take this compass and use True Harbor's Wellness Dashboard." }
+        { speaker: "Sherpa", text: hasData
+          ? `Your bills total ${formatCurrency(totalBills)}, leaving you with ${formatCurrency(tdi)} in true discretionary income. Let's start climbing.`
+          : "First, you must understand your current position. Take this compass and use True Harbor's Wellness Dashboard." }
       ],
-      desc: "True Harbor's Wellness Dashboard takes a complete snapshot of your financial health.",
+      desc: hasData
+        ? `Your True Harbor snapshot shows ${formatCurrency(income)} income and ${formatCurrency(totalBills)} in bills this period.`
+        : "True Harbor's Wellness Dashboard takes a complete snapshot of your financial health.",
       options: [
-        { text: "Take Financial Snapshot", resultText: "You have securely established your financial baseline.", reward: 50, toolGained: 'financial_compass', weatherChange: 'sunrise' },
+        { text: "Take Financial Snapshot", resultText: hasData ? `Baseline established: ${formatCurrency(tdi)} true disposable income.` : "You have securely established your financial baseline.", reward: 50, toolGained: 'financial_compass', weatherChange: 'sunrise' },
         { text: "Climb without a Dashboard", resultText: "You are climbing blind. The path is confusing.", reward: 10, costEnergy: 1, weatherChange: 'fog' }
       ],
       nextNodes: ['income_valley']
     },
+
     income_valley: {
       title: "Stage 2: Cash Flow Tracking",
-      script: [
-        { speaker: "Sherpa", text: "A river of income flows here. True Harbor's Cash Flow tools help you track every drop." },
-        { speaker: "You", text: "How do I make sure none of it slips away?" },
-        { speaker: "Sherpa", text: "By linking your accounts in True Harbor. Use this Income Rope to bind them securely." }
-      ],
-      desc: "True Harbor automatically categorizes and tracks your income streams.",
-      options: [
-        { text: "Link Accounts securely (Use Compass)", requires: 'financial_compass', resultText: "True Harbor is now tracking your cash flow beautifully.", reward: 100, toolGained: 'income_rope' },
-        { text: "Track manually on paper", resultText: "You lost track of several transactions.", reward: 20, costEnergy: 1, weatherChange: 'fog' }
-      ],
+      script: (() => {
+        if (hasData && incomeTrend === 'up') {
+          return [
+            { speaker: "Sherpa", text: `Great news! Your income rose from ${formatCurrency(incomeLastMonth)} to ${formatCurrency(incomeThisMonth)}. The wind is at our back.` },
+            { speaker: "You", text: "That's encouraging! How do I keep this momentum?" },
+            { speaker: "Sherpa", text: "By tracking every stream in True Harbor's Cash Flow tools. Let's secure this advantage." }
+          ];
+        } else if (hasData && incomeTrend === 'down') {
+          return [
+            { speaker: "Sherpa", text: `Warning, climber. Your income dropped from ${formatCurrency(incomeLastMonth)} to ${formatCurrency(incomeThisMonth)}. The trail has narrowed.` },
+            { speaker: "You", text: "That's concerning. What should I do?" },
+            { speaker: "Sherpa", text: "First, understand where each dollar goes. True Harbor's Cash Flow tools will help us find the leak." }
+          ];
+        }
+        return [
+          { speaker: "Sherpa", text: "A river of income flows here. True Harbor's Cash Flow tools help you track every drop." },
+          { speaker: "You", text: "How do I make sure none of it slips away?" },
+          { speaker: "Sherpa", text: "By linking your accounts in True Harbor. Use this Income Rope to bind them securely." }
+        ];
+      })(),
+      desc: hasData
+        ? `Your income is ${incomeTrend === 'up' ? '📈 trending up' : incomeTrend === 'down' ? '📉 trending down' : '➡️ stable'} (${formatCurrency(incomeThisMonth)} this period).`
+        : "True Harbor automatically categorizes and tracks your income streams.",
+      options: (() => {
+        const opts = [
+          { text: "Link Accounts securely (Use Compass)", requires: 'financial_compass', resultText: hasData ? `True Harbor is tracking your ${formatCurrency(incomeThisMonth)} income stream.` : "True Harbor is now tracking your cash flow beautifully.", reward: incomeTrend === 'up' ? 150 : 100, toolGained: 'income_rope' },
+          { text: "Track manually on paper", resultText: "You lost track of several transactions.", reward: 20, costEnergy: 1, weatherChange: 'fog' }
+        ];
+        if (incomeTrend === 'up') {
+          opts[0].resultText += " 🎉 Income growth bonus!";
+        }
+        return opts;
+      })(),
       nextNodes: ['budget_ridge']
     },
+
     budget_ridge: {
       title: "Stage 3: The 50/30/20 Budget",
-      script: [
-        { speaker: "Sherpa", text: "The ridge ahead splits. We must allocate our resources wisely." },
-        { speaker: "You", text: "What is the best way to structure my finances here?" },
-        { speaker: "Sherpa", text: "True Harbor uses the 50/30/20 rule. Allocate your monthly income into Needs, Wants, and Savings." }
-      ],
-      desc: "Use True Harbor's budgeting tool to allocate your monthly income securely.",
+      script: (() => {
+        if (hasData && budgetHealth === 'over_budget') {
+          return [
+            { speaker: "Sherpa", text: `Climber, you've spent ${formatCurrency(totalSpent)} against a budget of ${formatCurrency(totalBudget)}. You are over budget!` },
+            { speaker: "You", text: "That's not good. How do I fix this?" },
+            { speaker: "Sherpa", text: "We must restructure. True Harbor uses the 50/30/20 rule to bring you back on track." }
+          ];
+        } else if (hasData && budgetHealth === 'on_track') {
+          return [
+            { speaker: "Sherpa", text: `Excellent discipline! You've spent ${formatCurrency(totalSpent)} of your ${formatCurrency(totalBudget)} budget. You're on track.` },
+            { speaker: "You", text: "That's great to hear!" },
+            { speaker: "Sherpa", text: "Let's refine your 50/30/20 allocation to push even higher." }
+          ];
+        }
+        return [
+          { speaker: "Sherpa", text: "The ridge ahead splits. We must allocate our resources wisely." },
+          { speaker: "You", text: "What is the best way to structure my finances here?" },
+          { speaker: "Sherpa", text: "True Harbor uses the 50/30/20 rule. Allocate your monthly income into Needs, Wants, and Savings." }
+        ];
+      })(),
+      desc: hasData
+        ? `Budget Status: ${budgetHealth === 'over_budget' ? '🔴 Over Budget' : budgetHealth === 'on_track' ? '🟢 On Track' : budgetHealth === 'warning' ? '🟡 Warning' : '⚪ No Budget Set'}`
+        : "Use True Harbor's budgeting tool to allocate your monthly income securely.",
       hasChallenge: 'budget',
-      nextNodes: ['aggressive_cliff', 'steady_trail'] // Branching paths!
+      nextNodes: ['aggressive_cliff', 'steady_trail']
     },
+
     aggressive_cliff: {
       title: "Branch A: Avalanche Debt Strategy",
       script: [
-        { speaker: "Sherpa", text: "You chose the steep cliff. High risk, high interest." },
+        { speaker: "Sherpa", text: hasData && overdueBills > 0
+          ? `You have ${overdueBills} overdue bill(s). The cliff is steep with high-interest debt.`
+          : "You chose the steep cliff. High risk, high interest." },
         { speaker: "You", text: "How do we clear this high-interest debt quickly?" },
-        { speaker: "Sherpa", text: "True Harbor recommends the Avalanche Method. Use your Compound Sword to slash the highest interest rates first." }
+        { speaker: "Sherpa", text: "True Harbor recommends the Avalanche Method. Attack the highest interest rates first." }
       ],
-      desc: "True Harbor's Debt Planner is showing dangerous interest rates. Do you attack the highest rate?",
+      desc: hasData && overdueBills > 0
+        ? `⚠️ ${overdueBills} overdue bill(s) detected. True Harbor's Debt Planner shows dangerous interest rates.`
+        : "True Harbor's Debt Planner is showing dangerous interest rates. Do you attack the highest rate?",
       options: [
         { text: "Execute Avalanche Strategy", requires: 'compound_sword', resultText: "You saved thousands in interest by attacking the highest rate first!", reward: 300 },
         { text: "Pay minimums only", resultText: "The debt grew larger while you climbed slowly.", reward: 50, costEnergy: 2, weatherChange: 'storm' }
       ],
       nextNodes: ['debt_avalanche']
     },
+
     steady_trail: {
       title: "Branch B: Snowball Debt Strategy",
       script: [
@@ -88,39 +162,67 @@ export const StageModal = () => {
       ],
       nextNodes: ['debt_avalanche']
     },
+
     debt_avalanche: {
       title: "Stage 5: True Harbor Debt Planner",
       script: [
-        { speaker: "Sherpa", text: "An avalanche of combined debt is roaring toward us!" },
+        { speaker: "Sherpa", text: hasData && salaryBillRatio > 50
+          ? `Your bills consume ${salaryBillRatio.toFixed(0)}% of your income. The avalanche is massive!`
+          : "An avalanche of combined debt is roaring toward us!" },
         { speaker: "You", text: "Let's use True Harbor's Debt Strategy Planner to survive this." },
         { speaker: "Sherpa", text: "Choose your method in the app. Let the software calculate your path to freedom." }
       ],
-      desc: "Open True Harbor's Debt Planner to formulate your survival strategy.",
+      desc: hasData
+        ? `Bills-to-Income Ratio: ${salaryBillRatio.toFixed(0)}%. Open True Harbor's Debt Planner to formulate your survival strategy.`
+        : "Open True Harbor's Debt Planner to formulate your survival strategy.",
       hasChallenge: 'debt',
       nextNodes: ['savings_camp']
     },
+
     savings_camp: {
       title: "Stage 6: Goal Tracking",
-      script: [
-        { speaker: "Sherpa", text: "We are high up now. It is time to look to the future." },
-        { speaker: "You", text: "I need to secure investments for retirement." },
-        { speaker: "Sherpa", text: "True Harbor's Goal Tracking feature will automate your savings and secure your camp." }
-      ],
-      desc: "Set up automated savings goals in True Harbor for your final push.",
+      script: (() => {
+        if (hasData && tdi > 0) {
+          return [
+            { speaker: "Sherpa", text: `You have ${formatCurrency(tdi)} in true discretionary income. This is your savings potential!` },
+            { speaker: "You", text: "I need to secure investments for retirement." },
+            { speaker: "Sherpa", text: "True Harbor's Goal Tracking feature will automate your savings. Let's secure your camp." }
+          ];
+        } else if (hasData && tdi <= 0) {
+          return [
+            { speaker: "Sherpa", text: `Warning: Your true discretionary income is ${formatCurrency(tdi)}. You're spending more than you earn.` },
+            { speaker: "You", text: "This is dangerous. What do I do?" },
+            { speaker: "Sherpa", text: "We must cut costs before we can save. Review your bills in True Harbor and set up automated savings goals." }
+          ];
+        }
+        return [
+          { speaker: "Sherpa", text: "We are high up now. It is time to look to the future." },
+          { speaker: "You", text: "I need to secure investments for retirement." },
+          { speaker: "Sherpa", text: "True Harbor's Goal Tracking feature will automate your savings and secure your camp." }
+        ];
+      })(),
+      desc: hasData
+        ? `True Discretionary Income: ${formatCurrency(tdi)}. Set up automated savings goals for your final push.`
+        : "Set up automated savings goals in True Harbor for your final push.",
       options: [
-        { text: "Automate Savings Goals", requires: 'debt_axe', resultText: "Your True Harbor goals are set. The summit awaits!", reward: 200, toolGained: 'savings_beacon' },
+        { text: "Automate Savings Goals", requires: 'debt_axe', resultText: hasData ? `Automated savings of ${formatCurrency(Math.max(0, tdi * 0.2))} per month set up!` : "Your True Harbor goals are set. The summit awaits!", reward: tdi > 0 ? 250 : 200, toolGained: 'savings_beacon' },
         { text: "Save manually when possible", resultText: "You forgot to save this month. Progress is slow.", reward: 50, costEnergy: 1 }
       ],
       nextNodes: ['summit']
     },
+
     summit: {
       title: "The Summit: True Financial Wellness",
       script: [
         { speaker: "Sherpa", text: "You have done it. You reached the summit of Financial Ascent." },
         { speaker: "You", text: "True Harbor made navigating the complexity so much easier." },
-        { speaker: "Sherpa", text: "The app is merely the tool; you provided the discipline. Your financial foundation is now as solid as this mountain." }
+        { speaker: "Sherpa", text: hasData
+          ? `With ${formatCurrency(income)} income and ${formatCurrency(tdi)} in savings potential, your financial foundation is as solid as this mountain.`
+          : "The app is merely the tool; you provided the discipline. Your financial foundation is now as solid as this mountain." }
       ],
-      desc: "Congratulations! You have mastered True Harbor and secured your financial future.",
+      desc: hasData
+        ? `Congratulations! Income: ${formatCurrency(income)} | Bills: ${formatCurrency(totalBills)} | Savings Potential: ${formatCurrency(Math.max(0, tdi))}`
+        : "Congratulations! You have mastered True Harbor and secured your financial future.",
       options: [
         { text: "Claim Summit Reward", resultText: "You are a True Harbor Navigator!", reward: 1000 }
       ],
@@ -135,13 +237,29 @@ export const StageModal = () => {
       <DialogueScreen 
         script={currentEncounter.script} 
         onComplete={() => {
-          if (currentEncounter.hasChallenge) {
+          if (hasData) {
+            setEncounterState('sherpa_chat');
+          } else if (currentEncounter.hasChallenge) {
             setEncounterState('challenge');
           } else {
             setEncounterState('intro');
           }
         }} 
       />
+    );
+  }
+
+  if (encounterState === 'sherpa_chat') {
+    return (
+      <SherpaChat 
+        stageId={activeStageModal}
+        onClose={() => {
+          if (currentEncounter.hasChallenge) {
+            setEncounterState('challenge');
+          } else {
+            setEncounterState('intro');
+          }
+      }} />
     );
   }
 
@@ -191,7 +309,6 @@ export const StageModal = () => {
 
   const handleComplete = () => {
     playSFX('chime');
-    // Cinematic Shake and Glow for Unlocking
     gsap.to('.stage-modal-container', {
       scale: 1.05,
       boxShadow: '0 0 50px rgba(74, 222, 128, 0.8)',
@@ -216,118 +333,77 @@ export const StageModal = () => {
     gsap.to('.stage-modal-container', { scale: 0.8, opacity: 0, duration: 0.3, onComplete: closeStageModal });
   };
 
-  const styles = {
-    overlay: {
-      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      display: 'flex', justifyContent: 'center', alignItems: 'center',
-      zIndex: 50,
-      pointerEvents: 'none' // Allow clicks through empty space
-    },
-    container: {
-      pointerEvents: 'auto', // Re-enable pointer events for the modal itself
-      backgroundImage: 'url(/ui_wooden_board.jpg)',
-      backgroundSize: '100% 100%',
-      backgroundPosition: 'center',
-      backgroundRepeat: 'no-repeat',
-      borderRadius: '20px',
-      padding: '50px 60px',
-      width: '90%', maxWidth: '500px',
-      maxHeight: '90vh',
-      overflowY: 'auto',
-      textAlign: 'center',
-      boxShadow: '0 30px 60px rgba(0,0,0,0.9)',
-      position: 'relative',
-      color: '#fff',
-      border: 'none', // The asset has its own border
-      boxSizing: 'border-box'
-    },
-    title: {
-      fontSize: '28px', fontFamily: "'Rowdies', cursive",
-      color: '#fef3c7', marginBottom: '15px',
-      textShadow: '0 4px 6px rgba(0,0,0,0.8)'
-    },
-    desc: {
-      fontSize: '18px', marginBottom: '25px', lineHeight: '1.5'
-    },
-    optionBtn: (isLocked) => ({
-      backgroundImage: isLocked ? 'none' : 'url(/ui_stone_bar.jpg)',
-      backgroundSize: 'cover',
-      backgroundColor: isLocked ? 'rgba(0,0,0,0.5)' : 'transparent',
-      color: isLocked ? '#64748b' : '#f8fafc',
-      border: isLocked ? '2px solid #334155' : '2px solid #cbd5e1',
-      borderRadius: '8px',
-      padding: '15px',
-      fontSize: '18px',
-      fontWeight: 'bold',
-      fontFamily: "'Nunito', sans-serif",
-      cursor: isLocked ? 'not-allowed' : 'pointer',
-      width: '100%',
-      marginBottom: '15px',
-      transition: 'transform 0.1s',
-      boxShadow: isLocked ? 'none' : '0 8px 15px rgba(0,0,0,0.8), inset 0 2px 4px rgba(255,255,255,0.2)',
-      textShadow: isLocked ? 'none' : '2px 2px 4px rgba(0,0,0,0.9)'
-    }),
-    rewardText: {
-      color: '#fbbf24', fontSize: '24px', fontWeight: 'bold', margin: '20px 0',
-      textShadow: '0 2px 4px rgba(0,0,0,0.8)', fontFamily: "'Rowdies', cursive"
-    },
-    continueBtn: {
-      backgroundImage: 'url(/ui_stone_bar.jpg)',
-      backgroundSize: 'cover',
-      color: '#4ade80', border: '2px solid #4ade80',
-      padding: '15px 30px',
-      borderRadius: '8px', fontSize: '20px', fontWeight: 'bold', cursor: 'pointer',
-      boxShadow: '0 8px 15px rgba(0,0,0,0.8)',
-      textShadow: '2px 2px 4px rgba(0,0,0,0.9)',
-      fontFamily: "'Rowdies', cursive"
-    }
-  };
-
   return (
-    <div style={styles.overlay}>
-      <div className="stage-modal-container" style={styles.container}>
-        <button style={{...styles.optionBtn(false), position: 'absolute', top: -15, right: -15, width: 40, height: 40, padding: 0, borderRadius: '50%', background: '#ef4444', borderBottom: '4px solid #991b1b'}} onClick={handleClose}>X</button>
-        
-        <div style={styles.title}>{currentEncounter.title}</div>
-        
-        {encounterState === 'challenge' ? (
-          currentEncounter.hasChallenge === 'budget' ? (
-            <BudgetChallenge onComplete={(data) => handleChallengeComplete('budget', data)} />
-          ) : (
-            <DebtChallenge onComplete={(data) => handleChallengeComplete('debt', data)} />
-          )
-        ) : encounterState === 'intro' ? (
-          <>
-            <div style={styles.desc}>{currentEncounter.desc}</div>
-            
-            {currentEncounter.options.map((opt, i) => {
-              const hasTool = !opt.requires || inventory.includes(opt.requires);
-              return (
-                <button 
-                  key={i}
-                  style={styles.optionBtn(!hasTool)}
-                  onClick={() => handleChoice(opt)}
-                  onPointerDown={(e) => { if(hasTool) e.currentTarget.style.transform = 'translateY(4px)'}}
-                  onPointerUp={(e) => { if(hasTool) e.currentTarget.style.transform = 'translateY(0)'}}
-                >
-                  {opt.text} {!hasTool && `(Requires: ${opt.requires.replace('_', ' ')})`}
-                </button>
-              )
-            })}
-          </>
+    <div className="vn-overlay stage-modal-overlay">
+      
+      {encounterState === 'challenge' ? (
+        currentEncounter.hasChallenge === 'budget' ? (
+          <BudgetChallenge onComplete={(data) => handleChallengeComplete('budget', data)} />
         ) : (
-          <>
-            <div style={styles.desc}>{outcome.resultText}</div>
-            <div style={styles.rewardText}>Reward: {outcome.reward} 🪙</div>
-            {outcome.toolGained && (
-              <div style={{color: '#38bdf8', marginBottom: '20px', fontWeight: 'bold'}}>
-                Acquired Tool: {outcome.toolGained.replace('_', ' ').toUpperCase()}!
-              </div>
-            )}
-            <button style={styles.continueBtn} onClick={handleComplete}>Continue Ascent</button>
-          </>
-        )}
-      </div>
+          <DebtChallenge onComplete={(data) => handleChallengeComplete('debt', data)} />
+        )
+      ) : (
+        <>
+          <div className="vn-sprites-container">
+            <img className="vn-sherpa-sprite sherpa-sprite" src="/sprite_sherpa.png" alt="Sherpa" />
+            <div className="vn-player-sprite player-sprite" style={{ filter: 'brightness(0.5)' }}>
+              <img src="/sprite_mountaineer.png" alt="Player" className="vn-player-img" />
+            </div>
+          </div>
+          
+          <div className="vn-dialogue-container stage-modal-container">
+            <button 
+              style={{position: 'absolute', top: -15, right: -15, width: 40, height: 40, padding: 0, borderRadius: '50%', background: '#ef4444', border: '3px solid #991b1b', color: 'white', fontWeight: 'bold', cursor: 'pointer', zIndex: 20}} 
+              onClick={handleClose}
+            >X</button>
+            
+            <div className="vn-dialogue-box speaker-sherpa">
+              <div className="vn-speaker-badge sherpa">Sherpa</div>
+              
+              {encounterState === 'intro' ? (
+                <>
+                  <TypewriterText text={currentEncounter.desc} speed={15} />
+                  <div className="vn-options-container" style={{ justifyContent: 'center' }}>
+                    {currentEncounter.options.map((opt, i) => {
+                      const hasTool = !opt.requires || inventory.includes(opt.requires);
+                      return (
+                        <button 
+                          key={i}
+                          className="vn-option-btn"
+                          disabled={!hasTool}
+                          style={{ flex: '1 1 45%', maxWidth: '400px' }}
+                          onClick={() => handleChoice(opt)}
+                        >
+                          {opt.text} {!hasTool && `(Requires: ${opt.requires.replace('_', ' ')})`}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <TypewriterText text={outcome.resultText} speed={15} />
+                  
+                  <div className="vn-reward-text">Reward: {outcome.reward} 🪙</div>
+                  
+                  {outcome.toolGained && (
+                    <div style={{color: '#38bdf8', marginBottom: '15px', fontWeight: 'bold', fontSize: '20px'}}>
+                      Acquired Tool: {outcome.toolGained.replace('_', ' ').toUpperCase()}!
+                    </div>
+                  )}
+                  
+                  <button 
+                    className="vn-continue-btn"
+                    onClick={handleComplete}
+                  >
+                    Continue Ascent
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

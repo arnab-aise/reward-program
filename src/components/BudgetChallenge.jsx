@@ -1,14 +1,24 @@
 import React, { useState } from 'react';
 import gsap from 'gsap';
 import { useAudio } from '../hooks/useAudio';
+import { useGameStore } from '../store/useGameStore';
 
 export const BudgetChallenge = ({ onComplete }) => {
   const { playSFX } = useAudio();
-  const income = 4000;
-  const targetNeeds = 2000; // 50% of 4000
-  const targetWants = 1200; // 30% of 4000
-  const targetSavings = 800; // 20% of 4000
+  const { financialData } = useGameStore();
+  
+  // Get real income, default to 4000 if not available
+  const realIncome = financialData?.income || 4000;
+  
+  // Round to nearest 100 for the mini-game mechanics
+  const income = Math.max(1000, Math.round(realIncome / 100) * 100);
+  
+  const targetNeeds = income * 0.50; // 50%
+  const targetWants = income * 0.30; // 30%
+  const targetSavings = income * 0.20; // 20%
+  
   const [allocated, setAllocated] = useState({ needs: 0, wants: 0, savings: 0 });
+  const stepAmount = Math.round(income * 0.05); // 5% of income ensures 50%, 30%, and 20% are always perfectly reachable (10, 6, and 4 clicks respectively)
 
   const totalAllocated = allocated.needs + allocated.wants + allocated.savings;
   const remaining = income - totalAllocated;
@@ -42,7 +52,7 @@ export const BudgetChallenge = ({ onComplete }) => {
       return;
     }
     if (remaining > 0) {
-      alert("Allocate all $4000 of your monthly income!");
+      alert(`Allocate all $${income} of your monthly income!`);
       return;
     }
 
@@ -86,7 +96,7 @@ export const BudgetChallenge = ({ onComplete }) => {
   return (
     <div className="budget-container" style={styles.wrapper}>
       <div style={styles.header}>True Harbor: 50/30/20 Planner</div>
-      <p style={{marginBottom: '20px'}}>Use True Harbor's framework to budget your $4,000 Monthly Income.</p>
+      <p style={{marginBottom: '20px'}}>Use True Harbor's framework to budget your ${income} Monthly Income.</p>
       
       <div style={styles.supplyBox}>
         <span style={{fontSize: '18px'}}>Unallocated Cash:</span>
@@ -101,9 +111,9 @@ export const BudgetChallenge = ({ onComplete }) => {
           <div style={{fontSize: '12px', color: '#94a3b8'}}>Housing, Groceries, Bills (Target: ${targetNeeds})</div>
         </div>
         <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
-          <button style={styles.btn} onClick={() => handleAllocate('needs', -100)}>-</button>
+          <button style={styles.btn} onClick={() => handleAllocate('needs', -stepAmount)}>-</button>
           <span className="val-needs" style={{fontSize: '20px', width: '60px', textAlign: 'center'}}>${allocated.needs}</span>
-          <button style={styles.btn} onClick={() => handleAllocate('needs', 100)}>+</button>
+          <button style={styles.btn} onClick={() => handleAllocate('needs', stepAmount)}>+</button>
         </div>
       </div>
 
@@ -113,9 +123,9 @@ export const BudgetChallenge = ({ onComplete }) => {
           <div style={{fontSize: '12px', color: '#94a3b8'}}>Entertainment, Dining (Max: ${targetWants})</div>
         </div>
         <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
-          <button style={styles.btn} onClick={() => handleAllocate('wants', -100)}>-</button>
+          <button style={styles.btn} onClick={() => handleAllocate('wants', -stepAmount)}>-</button>
           <span className="val-wants" style={{fontSize: '20px', width: '60px', textAlign: 'center'}}>${allocated.wants}</span>
-          <button style={styles.btn} onClick={() => handleAllocate('wants', 100)}>+</button>
+          <button style={styles.btn} onClick={() => handleAllocate('wants', stepAmount)}>+</button>
         </div>
       </div>
 
@@ -125,9 +135,9 @@ export const BudgetChallenge = ({ onComplete }) => {
           <div style={{fontSize: '12px', color: '#94a3b8'}}>Emergency Fund, Investments (Target: ${targetSavings})</div>
         </div>
         <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
-          <button style={styles.btn} onClick={() => handleAllocate('savings', -100)}>-</button>
+          <button style={styles.btn} onClick={() => handleAllocate('savings', -stepAmount)}>-</button>
           <span className="val-savings" style={{fontSize: '20px', width: '60px', textAlign: 'center'}}>${allocated.savings}</span>
-          <button style={styles.btn} onClick={() => handleAllocate('savings', 100)}>+</button>
+          <button style={styles.btn} onClick={() => handleAllocate('savings', stepAmount)}>+</button>
         </div>
       </div>
 

@@ -1,14 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useGameStore } from '../store/useGameStore';
+import { generateLinkToken, exchangePublicToken, fetchSnapshot } from '../services/financeService';
+import { usePlaidLink } from 'react-plaid-link';
 import gsap from 'gsap';
+import { TypewriterText } from './TypewriterText';
+import './ConversationalUI.css';
 
 export const Onboarding = () => {
-  const { hasCompletedOnboarding, completeOnboarding } = useGameStore();
-  const [step, setStep] = useState(0);
+  const { hasCompletedOnboarding, completeOnboarding, isFinanceLoading, hasNoData, employeeId, setFinancialData, setFinanceStatus } = useGameStore();
   const [showContent, setShowContent] = useState(false);
+  const [linkToken, setLinkToken] = useState(null);
+  const [isLinking, setIsLinking] = useState(false);
+  
+  // Plaid integration
+  useEffect(() => {
+    if (hasNoData && employeeId && !linkToken) {
+      generateLinkToken(employeeId).then(token => setLinkToken(token)).catch(err => console.error("Plaid token error:", err));
+    }
+  }, [hasNoData, employeeId, linkToken]);
+
+  const onSuccess = useCallback(
+    async (publicToken) => {
+      setIsLinking(true);
+      try {
+        await exchangePublicToken(employeeId, publicToken);
+        // Data is now ready! Let's re-fetch the snapshot
+        setFinanceStatus(true, false);
+        const result = await fetchSnapshot(employeeId);
+        if (result.data) {
+          // Force a reload so useFinancialData in App can pick up the new snapshot and metrics
+          window.location.reload(); 
+        }
+      } catch (err) {
+        console.error("Exchange token failed:", err);
+      } finally {
+        setIsLinking(false);
+      }
+    },
+    [employeeId, setFinanceStatus]
+  );
+
+  const { open: openPlaid, ready: isPlaidReady } = usePlaidLink({
+    token: linkToken,
+    onSuccess,
+  });
 
   // Wait for the mountain cinematic pan to finish (2.5s)
-  React.useEffect(() => {
+  useEffect(() => {
     if (!hasCompletedOnboarding) {
       const timer = setTimeout(() => setShowContent(true), 2500);
       return () => clearTimeout(timer);
@@ -16,19 +54,18 @@ export const Onboarding = () => {
   }, [hasCompletedOnboarding]);
 
   // Bouncy entrance animation once shown
-  React.useEffect(() => {
+  useEffect(() => {
     if (showContent) {
       gsap.fromTo('.onboarding-container', 
         { scale: 0.3, opacity: 0 }, 
         { scale: 1, opacity: 1, duration: 1, ease: "elastic.out(1, 0.5)" }
       );
     }
-  }, [showContent]);
+  }, [showContent, isFinanceLoading]);
 
   if (hasCompletedOnboarding) return null;
 
   const handleAnswer = (startingXP) => {
-    // Small exit animation before completing
     gsap.to('.onboarding-container', {
       opacity: 0,
       scale: 0.9,
@@ -37,134 +74,53 @@ export const Onboarding = () => {
     });
   };
 
-  const styles = {
-    overlay: {
-      position: 'fixed',
-      top: 0, left: 0, right: 0, bottom: 0,
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      zIndex: 400,
-      pointerEvents: 'none' // Allow clicks to pass through empty space if needed, though the container should block them
-    },
-    container: {
-      pointerEvents: 'auto', // Re-enable pointer events for the modal itself
-      background: 'linear-gradient(to bottom, #78350f, #451a03)', // Wooden texture feel
-      border: '6px solid #290f01',
-      borderRadius: '24px',
-      padding: '25px',
-      width: '90%',
-      maxWidth: '500px',
-      textAlign: 'center',
-      boxShadow: '0 30px 60px rgba(0,0,0,0.8), inset 0 4px 10px rgba(255,255,255,0.2)'
-    },
-    innerPanel: {
-      backgroundColor: '#fef3c7', // Parchment feel
-      borderRadius: '16px',
-      padding: '30px',
-      border: '4px solid #92400e',
-      color: '#451a03',
-      boxShadow: 'inset 0 0 20px rgba(180, 83, 9, 0.3)'
-    },
-    sherpaIcon: {
-      fontSize: '72px',
-      marginBottom: '15px',
-      filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.4))'
-    },
-    title: {
-      fontSize: '32px',
-      fontFamily: "'Rowdies', cursive",
-      marginBottom: '15px',
-      color: '#92400e',
-      textShadow: '0 2px 2px rgba(255,255,255,0.8)',
-      textTransform: 'uppercase'
-    },
-    subtitle: {
-      fontSize: '18px',
-      color: '#78350f',
-      marginBottom: '30px',
-      lineHeight: '1.5',
-      fontWeight: 'bold'
-    },
-    buttonContainer: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '15px'
-    },
-    button: {
-      background: 'linear-gradient(to bottom, #38bdf8, #0284c7)',
-      color: '#fff',
-      border: 'none',
-      borderBottom: '6px solid #0369a1',
-      padding: '18px',
-      borderRadius: '18px',
-      fontSize: '20px',
-      fontFamily: "'Rowdies', cursive",
-      cursor: 'pointer',
-      display: 'flex',
-      justifyContent: 'space-between',
-      boxShadow: '0 8px 15px rgba(0,0,0,0.4)',
-      transition: 'all 0.1s'
-    },
-    xpBadge: {
-      color: '#fef08a',
-      textShadow: '0 1px 2px rgba(0,0,0,0.8)'
-    }
-  };
-
   return (
-    <div style={styles.overlay}>
+    <div className="vn-overlay">
       {showContent && (
-        <div className="onboarding-container" style={styles.container}>
-          <div style={styles.innerPanel}>
-            <div style={styles.sherpaIcon}>🏔️</div>
-            
-            {step === 0 && (
-              <>
-              <div style={styles.title}>Namaste, Climber.</div>
-              <div style={styles.subtitle}>
-                I am your Sherpa, your guide for this expedition. The True Harbor mountain is steep, but every good financial habit pushes you closer to the summit. 
-                <br /><br />
-                Before we begin, we must figure out where you are starting from.
-              </div>
-              <div style={styles.buttonContainer}>
-                <button 
-                  style={styles.button} 
-                  onPointerDown={(e) => e.currentTarget.style.transform = 'translateY(4px)'}
-                  onPointerUp={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-                  onPointerLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-                  onClick={() => setStep(1)}
-                >
-                  Let's get started
-                </button>
-              </div>
-            </>
-          )}
+        <>
+          <div className="vn-sprites-container">
+            <img className="vn-sherpa-sprite sherpa-sprite" src="/sprite_sherpa.png" alt="Sherpa" />
+            <div className="vn-player-sprite player-sprite" style={{ filter: 'brightness(0.5)' }}>
+              <img src="/sprite_mountaineer.png" alt="Player" className="vn-player-img" />
+            </div>
+          </div>
 
-          {step === 1 && (
-            <>
-              <div style={styles.title}>What's your primary goal right now?</div>
-              <div style={styles.subtitle}>
-                This will help us chart your path and determine your starting camp.
+          <div className="vn-dialogue-container onboarding-container">
+            <div className="vn-dialogue-box speaker-sherpa">
+              <div className="vn-speaker-badge sherpa">Sherpa</div>
+              
+              <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 0, overflow: 'hidden' }}>
+                {isFinanceLoading || isLinking ? (
+                  <div className="vn-message-text">Gathering Gear... Checking your financial snapshot. The Sherpa is preparing the map... <span style={{animation: 'pulse 1s infinite'}}>...</span></div>
+                ) : hasNoData ? (
+                  <>
+                    <TypewriterText text="The mountain is too treacherous to climb blind. You must securely link your bank account to True Harbor so I can guide you." speed={20} />
+                    <div className="vn-options-container" style={{ marginTop: 'auto' }}>
+                      <button className="vn-option-btn" disabled={!isPlaidReady} onClick={() => openPlaid()}>
+                        {isPlaidReady ? 'Link with Plaid' : 'Preparing Link...'}
+                      </button>
+                      <button className="vn-option-btn" style={{ background: '#475569', borderColor: '#334155', color: '#cbd5e1' }} onClick={() => handleAnswer(0)}>
+                        Climb Without Data (Demo)
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <TypewriterText text="Welcome to the Climb. I'm your guide. Your financial journey is a mountain, and every good habit pushes you closer to the summit. Let's figure out where you are starting from." speed={20} />
+                    <div className="vn-options-container" style={{ marginTop: 'auto' }}>
+                      <button 
+                        className="vn-continue-btn"
+                        onClick={() => handleAnswer(500)}
+                      >
+                        Let's get started
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
-              <div style={styles.buttonContainer}>
-                <button style={styles.button} onClick={() => handleAnswer(0)}>
-                  <span>I'm just starting to save</span>
-                  <span style={styles.xpBadge}>Start at Base Camp</span>
-                </button>
-                <button style={styles.button} onClick={() => handleAnswer(1000)}>
-                  <span>I'm paying off debt</span>
-                  <span style={styles.xpBadge}>+1000 XP (Camp 2)</span>
-                </button>
-                <button style={styles.button} onClick={() => handleAnswer(2000)}>
-                  <span>I'm actively investing</span>
-                  <span style={styles.xpBadge}>+2000 XP (Camp 3)</span>
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
