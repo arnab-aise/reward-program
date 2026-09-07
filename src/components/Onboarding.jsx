@@ -94,7 +94,7 @@ export const Onboarding = () => {
                   <div className="vn-message-text">Gathering Gear... Checking your financial snapshot. The Sherpa is preparing the map... <span style={{animation: 'pulse 1s infinite'}}>...</span></div>
                 ) : hasNoData ? (
                   <>
-                    <TypewriterText text="The mountain is too treacherous to climb blind. You must securely link your bank account to True Harbor so I can guide you." speed={20} />
+                    <TypewriterText text="The mountain is too treacherous to climb blind. You must securely link your bank account to Take Home so I can guide you." speed={20} />
                     <div className="vn-options-container" style={{ marginTop: 'auto' }}>
                       <button className="vn-option-btn" disabled={!isPlaidReady} onClick={() => openPlaid()}>
                         {isPlaidReady ? 'Link with Plaid' : 'Preparing Link...'}

@@ -56,14 +56,14 @@ export const SherpaShopModal = () => {
     {
       id: 'emergency_dynamite',
       name: 'Emergency Dynamite',
-      description: 'True Harbor Emergency Fund: Clears unexpected financial roadblocks.',
+      description: 'Take Home Emergency Fund: Clears unexpected financial roadblocks.',
       cost: 80,
       icon: '🧨'
     },
     {
       id: 'investment_pickaxe',
       name: 'Investment Pickaxe',
-      description: 'True Harbor Investment Account: Required to scale the vertical cliff of wealth.',
+      description: 'Take Home Investment Account: Required to scale the vertical cliff of wealth.',
       cost: 150,
       icon: '⛏️'
     }

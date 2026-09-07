@@ -42,19 +42,19 @@ export const StageModal = () => {
   // --- Build Dynamic Encounters ---
   const encounters = {
     base_camp: {
-      title: "Base Camp: True Harbor Snapshot",
+      title: "Base Camp: Take Home Snapshot",
       script: [
         { speaker: "Sherpa", text: hasData
-          ? `Welcome, climber. Your current income is ${formatCurrency(income)}. True Harbor has mapped your financial terrain.`
-          : "Welcome to the Financial Ascent. The mountain is treacherous, but the True Harbor platform will be your guide." },
+          ? `Welcome, climber. Your current income is ${formatCurrency(income)}. Take Home has mapped your financial terrain.`
+          : "Welcome to the Financial Ascent. The mountain is treacherous, but the Take Home platform will be your guide." },
         { speaker: "You", text: "I'm ready. Where do we begin?" },
         { speaker: "Sherpa", text: hasData
           ? `Your bills total ${formatCurrency(totalBills)}, leaving you with ${formatCurrency(tdi)} in true discretionary income. Let's start climbing.`
-          : "First, you must understand your current position. Take this compass and use True Harbor's Wellness Dashboard." }
+          : "First, you must understand your current position. Take this compass and use Take Home's Wellness Dashboard." }
       ],
       desc: hasData
-        ? `Your True Harbor snapshot shows ${formatCurrency(income)} income and ${formatCurrency(totalBills)} in bills this period.`
-        : "True Harbor's Wellness Dashboard takes a complete snapshot of your financial health.",
+        ? `Your Take Home snapshot shows ${formatCurrency(income)} income and ${formatCurrency(totalBills)} in bills this period.`
+        : "Take Home's Wellness Dashboard takes a complete snapshot of your financial health.",
       options: [
         { text: "Take Financial Snapshot", resultText: hasData ? `Baseline established: ${formatCurrency(tdi)} true disposable income.` : "You have securely established your financial baseline.", reward: 50, toolGained: 'financial_compass', weatherChange: 'sunrise' },
         { text: "Climb without a Dashboard", resultText: "You are climbing blind. The path is confusing.", reward: 10, costEnergy: 1, weatherChange: 'fog' }
@@ -69,27 +69,27 @@ export const StageModal = () => {
           return [
             { speaker: "Sherpa", text: `Great news! Your income rose from ${formatCurrency(incomeLastMonth)} to ${formatCurrency(incomeThisMonth)}. The wind is at our back.` },
             { speaker: "You", text: "That's encouraging! How do I keep this momentum?" },
-            { speaker: "Sherpa", text: "By tracking every stream in True Harbor's Cash Flow tools. Let's secure this advantage." }
+            { speaker: "Sherpa", text: "By tracking every stream in Take Home's Cash Flow tools. Let's secure this advantage." }
           ];
         } else if (hasData && incomeTrend === 'down') {
           return [
             { speaker: "Sherpa", text: `Warning, climber. Your income dropped from ${formatCurrency(incomeLastMonth)} to ${formatCurrency(incomeThisMonth)}. The trail has narrowed.` },
             { speaker: "You", text: "That's concerning. What should I do?" },
-            { speaker: "Sherpa", text: "First, understand where each dollar goes. True Harbor's Cash Flow tools will help us find the leak." }
+            { speaker: "Sherpa", text: "First, understand where each dollar goes. Take Home's Cash Flow tools will help us find the leak." }
           ];
         }
         return [
-          { speaker: "Sherpa", text: "A river of income flows here. True Harbor's Cash Flow tools help you track every drop." },
+          { speaker: "Sherpa", text: "A river of income flows here. Take Home's Cash Flow tools help you track every drop." },
           { speaker: "You", text: "How do I make sure none of it slips away?" },
-          { speaker: "Sherpa", text: "By linking your accounts in True Harbor. Use this Income Rope to bind them securely." }
+          { speaker: "Sherpa", text: "By linking your accounts in Take Home. Use this Income Rope to bind them securely." }
         ];
       })(),
       desc: hasData
         ? `Your income is ${incomeTrend === 'up' ? '📈 trending up' : incomeTrend === 'down' ? '📉 trending down' : '➡️ stable'} (${formatCurrency(incomeThisMonth)} this period).`
-        : "True Harbor automatically categorizes and tracks your income streams.",
+        : "Take Home automatically categorizes and tracks your income streams.",
       options: (() => {
         const opts = [
-          { text: "Link Accounts securely (Use Compass)", requires: 'financial_compass', resultText: hasData ? `True Harbor is tracking your ${formatCurrency(incomeThisMonth)} income stream.` : "True Harbor is now tracking your cash flow beautifully.", reward: incomeTrend === 'up' ? 150 : 100, toolGained: 'income_rope' },
+          { text: "Link Accounts securely (Use Compass)", requires: 'financial_compass', resultText: hasData ? `Take Home is tracking your ${formatCurrency(incomeThisMonth)} income stream.` : "Take Home is now tracking your cash flow beautifully.", reward: incomeTrend === 'up' ? 150 : 100, toolGained: 'income_rope' },
           { text: "Track manually on paper", resultText: "You lost track of several transactions.", reward: 20, costEnergy: 1, weatherChange: 'fog' }
         ];
         if (incomeTrend === 'up') {
@@ -107,7 +107,7 @@ export const StageModal = () => {
           return [
             { speaker: "Sherpa", text: `Climber, you've spent ${formatCurrency(totalSpent)} against a budget of ${formatCurrency(totalBudget)}. You are over budget!` },
             { speaker: "You", text: "That's not good. How do I fix this?" },
-            { speaker: "Sherpa", text: "We must restructure. True Harbor uses the 50/30/20 rule to bring you back on track." }
+            { speaker: "Sherpa", text: "We must restructure. Take Home uses the 50/30/20 rule to bring you back on track." }
           ];
         } else if (hasData && budgetHealth === 'on_track') {
           return [
@@ -119,12 +119,12 @@ export const StageModal = () => {
         return [
           { speaker: "Sherpa", text: "The ridge ahead splits. We must allocate our resources wisely." },
           { speaker: "You", text: "What is the best way to structure my finances here?" },
-          { speaker: "Sherpa", text: "True Harbor uses the 50/30/20 rule. Allocate your monthly income into Needs, Wants, and Savings." }
+          { speaker: "Sherpa", text: "Take Home uses the 50/30/20 rule. Allocate your monthly income into Needs, Wants, and Savings." }
         ];
       })(),
       desc: hasData
         ? `Budget Status: ${budgetHealth === 'over_budget' ? '🔴 Over Budget' : budgetHealth === 'on_track' ? '🟢 On Track' : budgetHealth === 'warning' ? '🟡 Warning' : '⚪ No Budget Set'}`
-        : "Use True Harbor's budgeting tool to allocate your monthly income securely.",
+        : "Use Take Home's budgeting tool to allocate your monthly income securely.",
       hasChallenge: 'budget',
       nextNodes: ['aggressive_cliff', 'steady_trail']
     },
@@ -136,11 +136,11 @@ export const StageModal = () => {
           ? `You have ${overdueBills} overdue bill(s). The cliff is steep with high-interest debt.`
           : "You chose the steep cliff. High risk, high interest." },
         { speaker: "You", text: "How do we clear this high-interest debt quickly?" },
-        { speaker: "Sherpa", text: "True Harbor recommends the Avalanche Method. Attack the highest interest rates first." }
+        { speaker: "Sherpa", text: "Take Home recommends the Avalanche Method. Attack the highest interest rates first." }
       ],
       desc: hasData && overdueBills > 0
-        ? `⚠️ ${overdueBills} overdue bill(s) detected. True Harbor's Debt Planner shows dangerous interest rates.`
-        : "True Harbor's Debt Planner is showing dangerous interest rates. Do you attack the highest rate?",
+        ? `⚠️ ${overdueBills} overdue bill(s) detected. Take Home's Debt Planner shows dangerous interest rates.`
+        : "Take Home's Debt Planner is showing dangerous interest rates. Do you attack the highest rate?",
       options: [
         { text: "Execute Avalanche Strategy", requires: 'compound_sword', resultText: "You saved thousands in interest by attacking the highest rate first!", reward: 300 },
         { text: "Pay minimums only", resultText: "The debt grew larger while you climbed slowly.", reward: 50, costEnergy: 2, weatherChange: 'storm' }
@@ -153,28 +153,28 @@ export const StageModal = () => {
       script: [
         { speaker: "Sherpa", text: "The steady trail. We build momentum by clearing small debts first." },
         { speaker: "You", text: "It feels good to get quick wins." },
-        { speaker: "Sherpa", text: "Yes. True Harbor's Snowball Strategy uses your budget to create an Emergency Shield against unexpected storms." }
+        { speaker: "Sherpa", text: "Yes. Take Home's Snowball Strategy uses your budget to create an Emergency Shield against unexpected storms." }
       ],
-      desc: "True Harbor suggests building an Emergency Fund before tackling massive debts.",
+      desc: "Take Home suggests building an Emergency Fund before tackling massive debts.",
       options: [
-        { text: "Deploy Emergency Shield", requires: 'budget_planner', resultText: "True Harbor's emergency planning deflected the financial storm!", reward: 150, toolGained: 'emergency_shield', weatherChange: 'sunrise' },
+        { text: "Deploy Emergency Shield", requires: 'budget_planner', resultText: "Take Home's emergency planning deflected the financial storm!", reward: 150, toolGained: 'emergency_shield', weatherChange: 'sunrise' },
         { text: "Ignore the warning", resultText: "An unexpected expense hit you hard.", reward: 0, costEnergy: 2, weatherChange: 'storm' }
       ],
       nextNodes: ['debt_avalanche']
     },
 
     debt_avalanche: {
-      title: "Stage 5: True Harbor Debt Planner",
+      title: "Stage 5: Take Home Debt Planner",
       script: [
         { speaker: "Sherpa", text: hasData && salaryBillRatio > 50
           ? `Your bills consume ${salaryBillRatio.toFixed(0)}% of your income. The avalanche is massive!`
           : "An avalanche of combined debt is roaring toward us!" },
-        { speaker: "You", text: "Let's use True Harbor's Debt Strategy Planner to survive this." },
+        { speaker: "You", text: "Let's use Take Home's Debt Strategy Planner to survive this." },
         { speaker: "Sherpa", text: "Choose your method in the app. Let the software calculate your path to freedom." }
       ],
       desc: hasData
-        ? `Bills-to-Income Ratio: ${salaryBillRatio.toFixed(0)}%. Open True Harbor's Debt Planner to formulate your survival strategy.`
-        : "Open True Harbor's Debt Planner to formulate your survival strategy.",
+        ? `Bills-to-Income Ratio: ${salaryBillRatio.toFixed(0)}%. Open Take Home's Debt Planner to formulate your survival strategy.`
+        : "Open Take Home's Debt Planner to formulate your survival strategy.",
       hasChallenge: 'debt',
       nextNodes: ['savings_camp']
     },
@@ -186,26 +186,26 @@ export const StageModal = () => {
           return [
             { speaker: "Sherpa", text: `You have ${formatCurrency(tdi)} in true discretionary income. This is your savings potential!` },
             { speaker: "You", text: "I need to secure investments for retirement." },
-            { speaker: "Sherpa", text: "True Harbor's Goal Tracking feature will automate your savings. Let's secure your camp." }
+            { speaker: "Sherpa", text: "Take Home's Goal Tracking feature will automate your savings. Let's secure your camp." }
           ];
         } else if (hasData && tdi <= 0) {
           return [
             { speaker: "Sherpa", text: `Warning: Your true discretionary income is ${formatCurrency(tdi)}. You're spending more than you earn.` },
             { speaker: "You", text: "This is dangerous. What do I do?" },
-            { speaker: "Sherpa", text: "We must cut costs before we can save. Review your bills in True Harbor and set up automated savings goals." }
+            { speaker: "Sherpa", text: "We must cut costs before we can save. Review your bills in Take Home and set up automated savings goals." }
           ];
         }
         return [
           { speaker: "Sherpa", text: "We are high up now. It is time to look to the future." },
           { speaker: "You", text: "I need to secure investments for retirement." },
-          { speaker: "Sherpa", text: "True Harbor's Goal Tracking feature will automate your savings and secure your camp." }
+          { speaker: "Sherpa", text: "Take Home's Goal Tracking feature will automate your savings and secure your camp." }
         ];
       })(),
       desc: hasData
         ? `True Discretionary Income: ${formatCurrency(tdi)}. Set up automated savings goals for your final push.`
-        : "Set up automated savings goals in True Harbor for your final push.",
+        : "Set up automated savings goals in Take Home for your final push.",
       options: [
-        { text: "Automate Savings Goals", requires: 'debt_axe', resultText: hasData ? `Automated savings of ${formatCurrency(Math.max(0, tdi * 0.2))} per month set up!` : "Your True Harbor goals are set. The summit awaits!", reward: tdi > 0 ? 250 : 200, toolGained: 'savings_beacon' },
+        { text: "Automate Savings Goals", requires: 'debt_axe', resultText: hasData ? `Automated savings of ${formatCurrency(Math.max(0, tdi * 0.2))} per month set up!` : "Your Take Home goals are set. The summit awaits!", reward: tdi > 0 ? 250 : 200, toolGained: 'savings_beacon' },
         { text: "Save manually when possible", resultText: "You forgot to save this month. Progress is slow.", reward: 50, costEnergy: 1 }
       ],
       nextNodes: ['summit']
@@ -215,16 +215,16 @@ export const StageModal = () => {
       title: "The Summit: True Financial Wellness",
       script: [
         { speaker: "Sherpa", text: "You have done it. You reached the summit of Financial Ascent." },
-        { speaker: "You", text: "True Harbor made navigating the complexity so much easier." },
+        { speaker: "You", text: "Take Home made navigating the complexity so much easier." },
         { speaker: "Sherpa", text: hasData
           ? `With ${formatCurrency(income)} income and ${formatCurrency(tdi)} in savings potential, your financial foundation is as solid as this mountain.`
           : "The app is merely the tool; you provided the discipline. Your financial foundation is now as solid as this mountain." }
       ],
       desc: hasData
         ? `Congratulations! Income: ${formatCurrency(income)} | Bills: ${formatCurrency(totalBills)} | Savings Potential: ${formatCurrency(Math.max(0, tdi))}`
-        : "Congratulations! You have mastered True Harbor and secured your financial future.",
+        : "Congratulations! You have mastered Take Home and secured your financial future.",
       options: [
-        { text: "Claim Summit Reward", resultText: "You are a True Harbor Navigator!", reward: 1000 }
+        { text: "Claim Summit Reward", resultText: "You are a Take Home Navigator!", reward: 1000 }
       ],
       nextNodes: []
     }
@@ -296,8 +296,8 @@ export const StageModal = () => {
     if (challengeType === 'budget') {
       setBudgetCreated(true);
       addTool('budget_planner');
-      setOutcome({ resultText: "You successfully built a 50/30/20 True Harbor budget!", reward: 150, toolGained: 'budget_planner' });
-      setSherpaMessage("A well-planned True Harbor budget is a climber's best rope.");
+      setOutcome({ resultText: "You successfully built a 50/30/20 Take Home budget!", reward: 150, toolGained: 'budget_planner' });
+      setSherpaMessage("A well-planned Take Home budget is a climber's best rope.");
     } else if (challengeType === 'debt') {
       setDebtStrategy(data);
       addTool('debt_axe');

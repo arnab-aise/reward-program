@@ -75,8 +75,8 @@ export const BudgetChallenge = ({ onComplete }) => {
         <div className="vn-speaker-badge sherpa">Sherpa</div>
         <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflowY: 'auto', paddingRight: '10px' }}>
           
-          <div className="vn-challenge-header">True Harbor: 50/30/20 Planner</div>
-          <div className="vn-challenge-desc">Use True Harbor's framework to budget your ${income} Monthly Income.</div>
+          <div className="vn-challenge-header">Take Home: 50/30/20 Planner</div>
+          <div className="vn-challenge-desc">Use Take Home's framework to budget your ${income} Monthly Income.</div>
           
           <div className="vn-challenge-row">
             <span style={{fontSize: '18px'}}>Unallocated Cash:</span>
@@ -126,7 +126,7 @@ export const BudgetChallenge = ({ onComplete }) => {
             style={{ opacity: (remaining === 0 && allocated.needs === targetNeeds && allocated.savings >= targetSavings) ? 1 : 0.5, marginTop: '20px', width: '100%', textAlign: 'center' }} 
             onClick={handleSubmit}
           >
-            Save True Harbor Budget
+            Save Take Home Budget
           </button>
 
         </div>

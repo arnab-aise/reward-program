@@ -1,6 +1,6 @@
 /**
  * Finance Service for the Reward Game.
- * Reuses the exact same API endpoints as the True Harbor main app.
+ * Reuses the exact same API endpoints as the Take Home main app.
  */
 
 const DASHBOARD_API = 'https://api.aiseservices.com';
@@ -9,7 +9,7 @@ const PLAID_API = 'https://y8e8lh1ja5.execute-api.us-east-1.amazonaws.com/prod/l
 
 /**
  * Fetch the dashboard snapshot for a given employee.
- * This mirrors the flow in true-harbor-ui's useSnapshot.ts:
+ * This mirrors the flow in take-home-ui's useSnapshot.ts:
  *   1. POST /dashboard-snapshot → get presigned S3 URL
  *   2. Fetch the presigned URL → parse JSON
  */
@@ -66,7 +66,7 @@ export async function fetchSnapshot(employeeId) {
 
 /**
  * Send a question to the Sherpa (chatbot API).
- * Reuses the exact same endpoint as the True Harbor chatbot.
+ * Reuses the exact same endpoint as the Take Home chatbot.
  */
 export async function askSherpa(message, userId) {
   const token = localStorage.getItem('token');
