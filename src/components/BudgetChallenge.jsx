@@ -25,10 +25,20 @@ export const BudgetChallenge = ({ onComplete }) => {
 
   const handleAllocate = (category, amount) => {
     playSFX('thud');
-    if (allocated[category] + amount < 0) return;
-    if (remaining - amount < 0 && amount > 0) return; // Cannot over-allocate
     
-    setAllocated(prev => ({ ...prev, [category]: prev[category] + amount }));
+    setAllocated(prev => {
+      // Prevent going below zero for a category
+      if (prev[category] + amount < 0) return prev;
+      
+      // Calculate current total from latest state
+      const currentTotal = prev.needs + prev.wants + prev.savings;
+      const currentRemaining = income - currentTotal;
+      
+      // Prevent over-allocating total income
+      if (currentRemaining - amount < 0 && amount > 0) return prev;
+      
+      return { ...prev, [category]: prev[category] + amount };
+    });
     
     // UI Juice
     gsap.fromTo(`.val-${category}`, 
