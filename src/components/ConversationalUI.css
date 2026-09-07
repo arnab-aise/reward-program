@@ -284,3 +284,208 @@
 .vn-continue-btn:active {
   transform: translateY(2px) scale(0.98);
 }
+
+/* =========================================================================
+   NEW CLASSES FOR SHOP AND CHALLENGES
+   ========================================================================= */
+
+.shop-modal-container {
+  background: linear-gradient(180deg, #1e293b, #0f172a);
+  border: 2px solid #0d9488;
+  border-radius: 24px;
+  padding: 2rem;
+  max-width: 550px;
+  width: 90%;
+  max-height: 90vh; /* critical for mobile */
+  display: flex;
+  flex-direction: column;
+  color: white;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 30px rgba(13, 148, 136, 0.4);
+}
+
+.shop-header-title {
+  font-size: 2rem;
+  margin: 0;
+  font-family: 'Rowdies', cursive;
+  color: #5eead4;
+}
+
+.shop-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  overflow-y: auto; /* Allow scrolling inside the shop */
+  flex-grow: 1;
+  padding-right: 10px;
+}
+
+.shop-item {
+  border-radius: 16px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.2s;
+}
+
+.vn-challenge-header {
+  font-size: 22px;
+  font-family: 'Rowdies', cursive;
+  color: #fde047;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+  margin-bottom: 20px;
+}
+
+.vn-challenge-desc {
+  font-size: 16px;
+  margin-bottom: 20px;
+  line-height: 1.4;
+  color: #f8fafc;
+}
+
+.vn-challenge-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0,0,0,0.5);
+  padding: 10px 15px;
+  border-radius: 8px;
+  border: 1px solid #475569;
+  margin-bottom: 10px;
+}
+
+.vn-challenge-card {
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+
+/* =========================================================================
+   RESPONSIVE DESIGN (Media Queries)
+   ========================================================================= */
+
+/* Tablet Screens */
+@media (max-width: 1024px) {
+  .vn-dialogue-box {
+    padding: 30px 40px;
+    min-height: 150px;
+    max-height: 40vh; /* Allow slightly more vertical room */
+  }
+
+  .vn-message-text {
+    font-size: 20px;
+  }
+
+  .vn-speaker-badge {
+    font-size: 18px;
+    padding: 6px 25px;
+    top: -20px;
+  }
+
+  .vn-option-btn, .vn-continue-btn {
+    padding: 12px 20px;
+    font-size: 18px;
+  }
+}
+
+/* Mobile Screens */
+@media (max-width: 768px) {
+  .vn-dialogue-container {
+    width: 95%;
+    margin-bottom: 15px;
+  }
+
+  .vn-dialogue-box {
+    padding: 25px 20px 20px 20px;
+    min-height: 120px;
+    max-height: 45vh; /* Even more room on mobile */
+    border-width: 3px;
+  }
+
+  .vn-message-text {
+    font-size: 16px;
+    line-height: 1.5;
+    margin-bottom: 15px;
+  }
+
+  .vn-speaker-badge {
+    font-size: 16px;
+    padding: 4px 20px;
+    top: -18px;
+    border-width: 2px;
+  }
+
+  .vn-speaker-badge.sherpa {
+    left: 20px;
+  }
+
+  .vn-speaker-badge.player {
+    right: 20px;
+  }
+
+  .vn-dialogue-box.speaker-sherpa::before { left: 40px; }
+  .vn-dialogue-box.speaker-sherpa::after { left: 44px; }
+  .vn-dialogue-box.speaker-player::before { right: 40px; }
+  .vn-dialogue-box.speaker-player::after { right: 44px; }
+
+  .vn-options-container {
+    flex-direction: column; 
+    gap: 8px;
+    margin-top: auto;
+  }
+
+  .vn-option-btn, .vn-continue-btn {
+    padding: 10px 15px;
+    font-size: 16px;
+    width: 100%; 
+    max-width: none !important;
+  }
+
+  .vn-reward-text {
+    font-size: 20px;
+    text-align: center;
+  }
+
+  .vn-sprites-container {
+    top: 10%;
+    bottom: 30%;
+  }
+
+  .vn-sherpa-sprite, .vn-player-sprite {
+    height: 80%;
+    width: 55%;
+  }
+
+  /* Responsive Challenge Adjustments */
+  .vn-challenge-header { font-size: 18px; margin-bottom: 15px; }
+  .vn-challenge-desc { font-size: 14px; margin-bottom: 15px; }
+  .vn-challenge-row { padding: 8px 10px; flex-direction: column; gap: 10px; align-items: flex-start; }
+  .vn-challenge-row > div:last-child { width: 100%; justify-content: space-between; }
+  
+  /* Responsive Shop Adjustments */
+  .shop-modal-container { padding: 1rem; border-radius: 12px; max-height: 80vh; max-width: 95%; margin: 0 auto; }
+  .shop-header-title { font-size: 1.3rem; }
+  .shop-items-list { gap: 0.5rem; margin-bottom: 1rem; }
+  .shop-item { padding: 0.6rem; flex-direction: column; text-align: center; gap: 0.3rem; border-radius: 10px; }
+  .shop-item h3 { font-size: 1rem; margin-bottom: 0.2rem; }
+  .shop-item p { font-size: 0.75rem; }
+  .shop-item-icon { font-size: 1.8rem !important; padding: 0.4rem !important; border-radius: 10px !important; }
+}
+
+/* Very Small Phones */
+@media (max-width: 480px) {
+  .vn-dialogue-box {
+    max-height: 50vh;
+  }
+  .vn-message-text {
+    font-size: 14px;
+  }
+  .vn-speaker-badge {
+    font-size: 14px;
+    top: -15px;
+  }
+}

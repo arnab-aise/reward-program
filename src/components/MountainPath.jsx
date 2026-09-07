@@ -47,8 +47,11 @@ export const MountainPath = () => {
 
   React.useEffect(() => {
     if (scrollContainerRef.current) {
-      // Cinematic Camera Pan
-      const targetScroll = activeCheckpoint.cy - (window.innerHeight / 2) + 100;
+      // The SVG maps 1000 viewBox units to the container's width.
+      // Calculate the actual pixel scale factor so the camera pan scrolls correctly.
+      const containerWidth = scrollContainerRef.current.clientWidth;
+      const scaleFactor = containerWidth / 1000; // SVG viewBox width is 1000
+      const targetScroll = (activeCheckpoint.cy * scaleFactor) - (window.innerHeight / 2) + 180;
       gsap.to(scrollContainerRef.current, {
         scrollTop: Math.max(0, targetScroll),
         duration: 2.5,
@@ -112,138 +115,130 @@ export const MountainPath = () => {
       }}
       onScroll={(e) => setScrollY(e.target.scrollTop)}
     >
-      {/* Parallax Layers */}
-      <div 
-        style={{
-          width: '100%', minWidth: '800px', height: '2400px',
-          position: 'absolute', top: 0, left: 0, zIndex: 0,
-          backgroundImage: 'url(/bg_mountain.jpg)', backgroundSize: 'cover',
-          transform: `translateY(${scrollY * 0.5}px)`,
-          filter: 'brightness(0.6) blur(2px)'
-        }}
-      />
-      <div 
-        style={{
-          width: '100%', minWidth: '800px', height: '2400px',
-          position: 'absolute', top: 0, left: 0, zIndex: 1,
-          backgroundImage: 'url(/bg_mountain.jpg)', backgroundSize: 'cover',
-          backgroundPosition: 'center bottom',
-          transform: `translateY(${scrollY * 0.2}px)`,
-          filter: 'drop-shadow(0 0 20px rgba(0,0,0,0.5))'
-        }}
-      />
+      <div style={{ position: 'relative', width: '100%' }}>
+        {/* Parallax Layers */}
+        <div 
+          className="mountain-parallax-layer"
+          style={{
+            backgroundImage: 'url(/bg_mountain.jpg)',
+            transform: `translateY(${scrollY * 0.5}px)`,
+            filter: 'brightness(0.6) blur(2px)',
+            zIndex: 0
+          }}
+        />
+        <div 
+          className="mountain-parallax-layer"
+          style={{
+            backgroundImage: 'url(/bg_mountain.jpg)',
+            backgroundPosition: 'center bottom',
+            transform: `translateY(${scrollY * 0.2}px)`,
+            filter: 'drop-shadow(0 0 20px rgba(0,0,0,0.5))',
+            zIndex: 1
+          }}
+        />
 
-      {/* Interactive Overlay Layer */}
-      <svg 
-        viewBox="0 0 1000 2400" 
-        style={{ 
-          width: '100%', 
-          minWidth: '800px', 
-          height: '2400px', 
-          display: 'block',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          zIndex: 10
-        }}
-      >
-        <g>
-          {/* Render Paths Based on Status */}
-          {Object.entries(nodeRoutes).map(([key, d]) => {
-            const [source, target] = key.split('->');
-            const isCompleted = completedNodes.includes(target);
-            const isUnlocked = unlockedNodes.includes(target);
-            const state = isCompleted ? 'completed' : isUnlocked ? 'unlocked' : 'locked';
-            return renderPath(d, state, key);
-          })}
+        {/* Interactive Overlay Layer */}
+        <svg 
+          className="mountain-svg"
+          viewBox="0 0 1000 2400" 
+        >
+          <g>
+            {/* Render Paths Based on Status */}
+            {Object.entries(nodeRoutes).map(([key, d]) => {
+              const [source, target] = key.split('->');
+              const isCompleted = completedNodes.includes(target);
+              const isUnlocked = unlockedNodes.includes(target);
+              const state = isCompleted ? 'completed' : isUnlocked ? 'unlocked' : 'locked';
+              return renderPath(d, state, key);
+            })}
 
-          {/* Render Obstacles & Difficulties */}
-          {/* Black Oval Difficulty (Income Valley -> Budget Ridge) */}
-          <g transform="translate(475, 1750)">
-            <ellipse cx="0" cy="0" rx="60" ry="25" fill="#0f172a" stroke="#020617" strokeWidth="3" filter="drop-shadow(0 0 15px rgba(0,0,0,0.9))" />
-            <ellipse cx="0" cy="0" rx="45" ry="15" fill="#000" />
-            {/* Subtle warning particles/swirls could go here, for now keeping it a pure black hole shape */}
-          </g>
-
-          {/* Rockslide */}
-          {!inventory.includes('emergency_dynamite') && (
-            <g transform="translate(500, 1150)">
-              <circle cx="-15" cy="0" r="20" fill="#475569" />
-              <circle cx="15" cy="5" r="25" fill="#334155" />
-              <circle cx="0" cy="-15" r="18" fill="#1e293b" />
-              <text x="-12" y="5" fontSize="20">🪨</text>
+            {/* Render Obstacles & Difficulties */}
+            {/* Black Oval Difficulty (Income Valley -> Budget Ridge) */}
+            <g transform="translate(475, 1750)">
+              <ellipse cx="0" cy="0" rx="60" ry="25" fill="#0f172a" stroke="#020617" strokeWidth="3" filter="drop-shadow(0 0 15px rgba(0,0,0,0.9))" />
+              <ellipse cx="0" cy="0" rx="45" ry="15" fill="#000" />
             </g>
-          )}
 
-          {/* Ice Wall */}
-          {!inventory.includes('investment_pickaxe') && (
-            <g transform="translate(400, 400)">
-              <path d="M -50 0 L -30 -40 L 0 -20 L 30 -50 L 60 -10 L 60 20 L -50 20 Z" fill="#38bdf8" opacity="0.8" />
-              <path d="M -40 0 L -20 -30 L 10 -10 L 40 -40 L 50 0 Z" fill="#e0f2fe" opacity="0.6" />
-              <text x="0" y="5" fontSize="20">🧊</text>
-            </g>
-          )}
-
-          {/* Render Checkpoints */}
-          {Object.values(checkpoints).map((cp) => {
-            const isUnlocked = unlockedNodes.includes(cp.id);
-            const isCurrent = activeCheckpoint.id === cp.id;
-            
-            // Allow clicking unlocked or completed nodes
-            const handleClick = () => {
-              if (completedNodes.includes(cp.id)) {
-                // Free to review completed nodes
-                openStageModal(cp.id);
-              } else if (isUnlocked) {
-                // GATING LOGIC
-                if (cp.id === 'debt_avalanche' && !inventory.includes('emergency_dynamite')) {
-                  playSFX('error');
-                  setSherpaMessage("A rockslide blocks the path! You need Emergency Dynamite to clear it.");
-                  return;
-                }
-                if (cp.id === 'summit' && !inventory.includes('investment_pickaxe')) {
-                  playSFX('error');
-                  setSherpaMessage("An impenetrable ice wall blocks the summit! You need Investment Pickaxes to scale it.");
-                  return;
-                }
-
-                // Determine energy cost
-                const highAltitude = ['debt_avalanche', 'savings_camp', 'summit'].includes(cp.id);
-                let cost = highAltitude ? 2 : 1;
-                if (highAltitude && inventory.includes('grip_boots')) cost -= 1;
-                
-                if (energy < cost) {
-                  triggerCollapse();
-                } else {
-                  deductEnergy(cost);
-                  openStageModal(cp.id);
-                }
-              }
-            };
-
-            return (
-              <g key={cp.id} onClick={handleClick} style={{ cursor: isUnlocked ? 'pointer' : 'default' }}>
-                <Checkpoint 
-                  cx={cp.cx}
-                  cy={cp.cy}
-                  label={cp.label}
-                  id={cp.id}
-                  isCurrent={isCurrent}
-                  isUnlocked={isUnlocked || completedNodes.includes(cp.id)}
-                />
+            {/* Rockslide */}
+            {!inventory.includes('emergency_dynamite') && (
+              <g transform="translate(500, 1150)">
+                <circle cx="-15" cy="0" r="20" fill="#475569" />
+                <circle cx="15" cy="5" r="25" fill="#334155" />
+                <circle cx="0" cy="-15" r="18" fill="#1e293b" />
+                <text x="-12" y="5" fontSize="20">🪨</text>
               </g>
-            );
-          })}
+            )}
 
-          {/* Render Avatar */}
-          <Avatar 
-            nodeId={activeCheckpoint.id} 
-            cx={activeCheckpoint.cx} 
-            cy={activeCheckpoint.cy} 
-            routes={nodeRoutes} 
-          />
-        </g>
-      </svg>
+            {/* Ice Wall */}
+            {!inventory.includes('investment_pickaxe') && (
+              <g transform="translate(400, 400)">
+                <path d="M -50 0 L -30 -40 L 0 -20 L 30 -50 L 60 -10 L 60 20 L -50 20 Z" fill="#38bdf8" opacity="0.8" />
+                <path d="M -40 0 L -20 -30 L 10 -10 L 40 -40 L 50 0 Z" fill="#e0f2fe" opacity="0.6" />
+                <text x="0" y="5" fontSize="20">🧊</text>
+              </g>
+            )}
+
+            {/* Render Checkpoints */}
+            {Object.values(checkpoints).map((cp) => {
+              const isUnlocked = unlockedNodes.includes(cp.id);
+              const isCurrent = activeCheckpoint.id === cp.id;
+              
+              // Allow clicking unlocked or completed nodes
+              const handleClick = () => {
+                if (completedNodes.includes(cp.id)) {
+                  // Free to review completed nodes
+                  openStageModal(cp.id);
+                } else if (isUnlocked) {
+                  // GATING LOGIC
+                  if (cp.id === 'debt_avalanche' && !inventory.includes('emergency_dynamite')) {
+                    playSFX('error');
+                    setSherpaMessage("A rockslide blocks the path! You need Emergency Dynamite to clear it.");
+                    return;
+                  }
+                  if (cp.id === 'summit' && !inventory.includes('investment_pickaxe')) {
+                    playSFX('error');
+                    setSherpaMessage("An impenetrable ice wall blocks the summit! You need Investment Pickaxes to scale it.");
+                    return;
+                  }
+
+                  // Determine energy cost
+                  const highAltitude = ['debt_avalanche', 'savings_camp', 'summit'].includes(cp.id);
+                  let cost = highAltitude ? 2 : 1;
+                  if (highAltitude && inventory.includes('grip_boots')) cost -= 1;
+                  
+                  if (energy < cost) {
+                    triggerCollapse();
+                  } else {
+                    deductEnergy(cost);
+                    openStageModal(cp.id);
+                  }
+                }
+              };
+
+              return (
+                <g key={cp.id} onClick={handleClick} style={{ cursor: isUnlocked ? 'pointer' : 'default' }}>
+                  <Checkpoint 
+                    cx={cp.cx}
+                    cy={cp.cy}
+                    label={cp.label}
+                    id={cp.id}
+                    isCurrent={isCurrent}
+                    isUnlocked={isUnlocked || completedNodes.includes(cp.id)}
+                  />
+                </g>
+              );
+            })}
+
+            {/* Render Avatar */}
+            <Avatar 
+              nodeId={activeCheckpoint.id} 
+              cx={activeCheckpoint.cx} 
+              cy={activeCheckpoint.cy} 
+              routes={nodeRoutes} 
+            />
+          </g>
+        </svg>
+      </div>
 
       {/* Floating Shop Button */}
       {(activeCheckpoint.id === 'base_camp' || activeCheckpoint.id === 'savings_camp') && (
@@ -251,25 +246,25 @@ export const MountainPath = () => {
           onClick={() => setShowShop(true)}
           style={{
             position: 'fixed',
-            bottom: '20px',
-            right: '20px',
+            bottom: '15px',
+            right: '15px',
             background: 'linear-gradient(to right, #0f766e, #0d9488)',
             border: '2px solid #5eead4',
             borderRadius: '50px',
-            padding: '1rem 2rem',
+            padding: '0.4rem 0.8rem',
             color: 'white',
             fontWeight: 'bold',
-            fontSize: '1.2rem',
+            fontSize: '0.8rem',
             fontFamily: "'Rowdies', cursive",
             cursor: 'pointer',
-            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 0 20px rgba(94, 234, 212, 0.4)',
+            boxShadow: '0 5px 10px -2px rgba(0, 0, 0, 0.5), 0 0 10px rgba(94, 234, 212, 0.3)',
             zIndex: 100,
             display: 'flex',
             alignItems: 'center',
-            gap: '10px'
+            gap: '5px'
           }}
         >
-          <span style={{ fontSize: '1.5rem' }}>⛺</span> Sherpa Shop
+          <span style={{ fontSize: '1rem' }}>⛺</span> Sherpa Shop
         </button>
       )}
     </div>

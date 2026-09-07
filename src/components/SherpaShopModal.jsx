@@ -88,20 +88,11 @@ export const SherpaShopModal = () => {
     >
       <div 
         ref={contentRef}
-        style={{
-          background: 'linear-gradient(180deg, #1e293b, #0f172a)',
-          border: '2px solid #0d9488',
-          borderRadius: '24px',
-          padding: '2rem',
-          maxWidth: '550px',
-          width: '90%',
-          color: 'white',
-          boxShadow: '0 20px 40px rgba(0,0,0,0.6), 0 0 30px rgba(13, 148, 136, 0.4)'
-        }}
+        className="shop-modal-container"
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <div>
-            <h2 style={{ fontSize: '2rem', margin: 0, fontFamily: "'Rowdies', cursive", color: '#5eead4' }}>Sherpa Shop</h2>
+            <h2 className="shop-header-title">Sherpa Shop</h2>
             <p style={{ margin: '0.5rem 0 0 0', color: '#cbd5e1' }}>Invest your coins into valuable assets.</p>
           </div>
           <div style={{ background: 'rgba(0,0,0,0.4)', padding: '0.5rem 1rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -110,7 +101,7 @@ export const SherpaShopModal = () => {
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
+        <div className="shop-items-list">
           {shopItems.map(item => {
             const isOwned = inventory.includes(item.id);
             const canAfford = coins >= item.cost;
@@ -118,25 +109,20 @@ export const SherpaShopModal = () => {
             return (
               <div 
                 key={item.id}
+                className="shop-item"
                 style={{
                   background: isOwned ? 'rgba(74, 222, 128, 0.1)' : 'rgba(255,255,255,0.05)',
-                  border: isOwned ? '1px solid #4ade80' : '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: '16px',
-                  padding: '1rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1rem',
-                  transition: 'all 0.2s'
+                  border: isOwned ? '1px solid #4ade80' : '1px solid rgba(255,255,255,0.1)'
                 }}
               >
-                <div style={{ fontSize: '2.5rem', background: 'rgba(0,0,0,0.3)', padding: '0.5rem', borderRadius: '12px' }}>
+                <div className="shop-item-icon" style={{ fontSize: '2.5rem', background: 'rgba(0,0,0,0.3)', padding: '0.5rem', borderRadius: '12px' }}>
                   {item.icon}
                 </div>
-                <div style={{ flex: 1 }}>
-                  <h3 style={{ margin: '0 0 0.25rem 0', fontSize: '1.2rem', color: isOwned ? '#4ade80' : '#f8fafc' }}>
+                <div style={{ flex: 1, textAlign: 'left' }}>
+                  <h3 style={{ margin: '0 0 0.25rem 0', color: isOwned ? '#4ade80' : '#f8fafc' }}>
                     {item.name} {isOwned && '✓'}
                   </h3>
-                  <p style={{ margin: 0, fontSize: '0.9rem', color: '#94a3b8', lineHeight: '1.4' }}>
+                  <p style={{ margin: 0, color: '#94a3b8', lineHeight: '1.4' }}>
                     {item.description}
                   </p>
                 </div>
@@ -167,18 +153,9 @@ export const SherpaShopModal = () => {
         </div>
 
         <button 
+          className="vn-continue-btn"
           onClick={handleClose}
-          style={{
-            width: '100%',
-            background: 'transparent',
-            border: '2px solid #64748b',
-            borderRadius: '12px',
-            padding: '1rem',
-            color: '#cbd5e1',
-            fontWeight: 'bold',
-            fontSize: '1.1rem',
-            cursor: 'pointer'
-          }}
+          style={{ width: '100%', alignSelf: 'center', marginTop: '10px' }}
         >
           Leave Shop
         </button>

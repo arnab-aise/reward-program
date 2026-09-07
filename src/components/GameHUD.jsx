@@ -29,46 +29,52 @@ export const GameHUD = () => {
       zIndex: 100,
       backgroundImage: 'url(/ui_stone_bar.jpg)',
       backgroundSize: '100% 100%',
-      padding: '10px 20px',
+      padding: '8px 12px',
       borderRadius: '12px',
-      boxShadow: '0 10px 20px rgba(0,0,0,0.8)'
+      boxShadow: '0 10px 20px rgba(0,0,0,0.8)',
+      gap: '8px'
     },
     profileBadge: {
       display: 'flex',
       alignItems: 'center',
-      gap: '10px'
+      gap: '6px',
+      flexShrink: 0
     },
     avatar: {
-      width: '50px',
-      height: '50px',
+      width: '36px',
+      height: '36px',
       borderRadius: '50%',
-      border: '3px solid #cbd5e1',
+      border: '2px solid #cbd5e1',
       boxShadow: '0 0 10px rgba(0,0,0,0.8)',
       backgroundImage: 'url(/portrait_mountaineer.jpg)',
       backgroundSize: 'cover',
-      backgroundPosition: 'top center'
+      backgroundPosition: 'top center',
+      flexShrink: 0
     },
     levelText: {
       color: '#f8fafc',
       fontFamily: "'Rowdies', cursive",
-      fontSize: '22px',
+      fontSize: '16px',
       textShadow: '2px 2px 4px rgba(0,0,0,0.9)'
     },
     inventoryContainer: {
       display: 'flex',
-      gap: '8px',
-      alignItems: 'center'
+      gap: '4px',
+      alignItems: 'center',
+      flexShrink: 1,
+      overflow: 'hidden'
     },
     inventorySlot: {
-      width: '40px',
-      height: '40px',
-      borderRadius: '8px',
+      width: '28px',
+      height: '28px',
+      borderRadius: '6px',
       backgroundColor: 'rgba(0,0,0,0.5)',
-      border: '2px solid #475569',
+      border: '1px solid #475569',
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      flexShrink: 0
     },
     inventoryIcon: {
       width: '100%',
@@ -77,21 +83,22 @@ export const GameHUD = () => {
     },
     statsContainer: {
       display: 'flex',
-      gap: '15px',
+      gap: '8px',
+      flexShrink: 0
     },
     statPill: {
       display: 'flex',
       alignItems: 'center',
       color: '#fff',
       fontFamily: "'Rowdies', cursive",
-      fontSize: '22px',
+      fontSize: '16px',
       textShadow: '2px 2px 4px rgba(0,0,0,0.9)'
     },
     icon: {
-      width: '32px',
-      height: '32px',
+      width: '24px',
+      height: '24px',
       borderRadius: '50%',
-      marginRight: '8px',
+      marginRight: '4px',
       boxShadow: '0 2px 5px rgba(0,0,0,0.8)'
     }
   };
