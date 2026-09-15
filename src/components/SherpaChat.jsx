@@ -30,7 +30,8 @@ export const SherpaChat = ({ onClose, stageId }) => {
     }
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [showOptions, setShowOptions] = useState(true);
+  const [showOptions, setShowOptions] = useState(false);
+  const [hasAskedQuestion, setHasAskedQuestion] = useState(false);
 
   // Animate character highlights on speaker change
   useEffect(() => {
@@ -56,12 +57,19 @@ export const SherpaChat = ({ onClose, stageId }) => {
 
   // Generate dynamic options based on the user's current stage context
   const getOptions = () => {
+    if (hasAskedQuestion) {
+      return [{
+        label: '🏔️ Continue climbing',
+        question: null,
+      }];
+    }
+
     let options = [];
     
     switch (stageId) {
       case 'base_camp':
         options = [
-          { label: '📷 Snapshot summary', question: 'Give me a summary of my financial snapshot.' },
+          { label: '📷 Snapshot summary', question: 'Give me a summary of my financial snapshot. Make sure to explicitly list my total current month bills (and mention that this includes bills I have already paid).' },
           { label: '⚠️ Biggest risk', question: 'What is my biggest financial risk right now?' }
         ];
         break;
@@ -119,6 +127,7 @@ export const SherpaChat = ({ onClose, stageId }) => {
     setShowOptions(false);
     setActiveSpeaker('player');
     setActiveMessage(option.label.replace(/^[^\s]+\s/, ''));
+    setHasAskedQuestion(true);
     
     // Add a slight delay before calling API to let user read their own question
     setTimeout(async () => {
@@ -131,12 +140,6 @@ export const SherpaChat = ({ onClose, stageId }) => {
       setIsLoading(false);
       setActiveMessage(response.botResponse);
     }, 1500);
-  };
-
-  const handleSherpaContinue = () => {
-    playSFX('thud');
-    setShowOptions(true);
-    setActiveMessage("What else would you like to focus on?");
   };
 
   return (
@@ -170,11 +173,7 @@ export const SherpaChat = ({ onClose, stageId }) => {
         )}
 
         {/* Dynamic Class for Chat Tails */}
-        <div 
-          className={`vn-dialogue-box speaker-${activeSpeaker}`} 
-          onClick={(!showOptions && activeSpeaker === 'sherpa' && !isLoading) ? handleSherpaContinue : undefined}
-          style={{ cursor: (!showOptions && activeSpeaker === 'sherpa' && !isLoading) ? 'pointer' : 'default' }}
-        >
+        <div className={`vn-dialogue-box speaker-${activeSpeaker}`}>
           
           <div className={`vn-speaker-badge ${activeSpeaker}`}>
             {activeSpeaker === 'sherpa' ? 'Sherpa' : 'You'}
@@ -186,12 +185,16 @@ export const SherpaChat = ({ onClose, stageId }) => {
               <span style={{marginLeft: '10px', animation: 'pulse 1s infinite'}}>...</span>
             </div>
           ) : (
-            <TypewriterText text={activeMessage} speed={20} isMarkdown={true} />
-          )}
-
-          {/* Click to continue indicator */}
-          {!showOptions && activeSpeaker === 'sherpa' && !isLoading && (
-            <div className="vn-continue-indicator">▼</div>
+            <TypewriterText 
+              text={activeMessage} 
+              speed={20} 
+              isMarkdown={true} 
+              onComplete={() => {
+                if (activeSpeaker === 'sherpa') {
+                  setShowOptions(true);
+                }
+              }}
+            />
           )}
           
         </div>

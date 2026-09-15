@@ -65,6 +65,37 @@ export async function fetchSnapshot(employeeId) {
 }
 
 /**
+ * Create a budget for the given employee.
+ * Matches the API used in the take-home main app.
+ */
+export async function createBudget(employeeId, payload) {
+  const token = localStorage.getItem('token');
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+
+  try {
+    const response = await fetch(`${DASHBOARD_API}/budget/${employeeId}`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload),
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      return { error: data?.message || 'Failed to create budget' };
+    }
+    
+    return { data };
+  } catch (err) {
+    console.error('Failed to create budget:', err);
+    return { error: 'Network error occurred' };
+  }
+}
+
+/**
  * Send a question to the Sherpa (chatbot API).
  * Reuses the exact same endpoint as the Take Home chatbot.
  */

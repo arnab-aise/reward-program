@@ -99,11 +99,36 @@ h1, h2, h3, .game-title {
   100% { opacity: 0.3; transform: scale(1); transform-origin: center; }
 }
 
+.sherpa-shop-btn {
+  position: fixed;
+  right: 15px;
+  bottom: 15px; /* Default for desktop/tall screens */
+  background: linear-gradient(to right, #0f766e, #0d9488);
+  border: 2px solid #5eead4;
+  border-radius: 50px;
+  padding: 0.3rem 0.6rem;
+  color: white;
+  font-weight: bold;
+  font-size: 0.75rem;
+  font-family: 'Rowdies', cursive;
+  cursor: pointer;
+  box-shadow: 0 5px 10px -2px rgba(0, 0, 0, 0.5), 0 0 10px rgba(94, 234, 212, 0.3);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 /* =========================================================================
    RESPONSIVE: Mobile
    ========================================================================= */
 @media (max-width: 768px) {
   .ui-wrapper {
     max-width: 100%;
+  }
+  
+  .sherpa-shop-btn {
+    bottom: auto;
+    top: 80px;
   }
 }

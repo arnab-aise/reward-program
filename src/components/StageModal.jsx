@@ -49,14 +49,14 @@ export const StageModal = () => {
           : "Welcome to the Financial Ascent. The mountain is treacherous, but the Take Home platform will be your guide." },
         { speaker: "You", text: "I'm ready. Where do we begin?" },
         { speaker: "Sherpa", text: hasData
-          ? `Your bills total ${formatCurrency(totalBills)}, leaving you with ${formatCurrency(tdi)} in true discretionary income. Let's start climbing.`
+          ? `Your current month bills total ${formatCurrency(totalBills)}, leaving you with ${formatCurrency(tdi)} in true discretionary income. Let's start climbing.`
           : "First, you must understand your current position. Take this compass and use Take Home's Wellness Dashboard." }
       ],
       desc: hasData
-        ? `Your Take Home snapshot shows ${formatCurrency(income)} income and ${formatCurrency(totalBills)} in bills this period.`
+        ? `Your Take Home snapshot shows ${formatCurrency(income)} income and ${formatCurrency(totalBills)} in current month bills (including those already paid).`
         : "Take Home's Wellness Dashboard takes a complete snapshot of your financial health.",
       options: [
-        { text: "Take Financial Snapshot", resultText: hasData ? `Baseline established: ${formatCurrency(tdi)} true disposable income.` : "You have securely established your financial baseline.", reward: 50, toolGained: 'financial_compass', weatherChange: 'sunrise' },
+        { text: "Review Snapshot & Climb", resultText: hasData ? `Baseline established: ${formatCurrency(tdi)} true disposable income.` : "You have securely established your financial baseline.", reward: 50, toolGained: 'financial_compass', weatherChange: 'sunrise' },
         { text: "Climb without a Dashboard", resultText: "You are climbing blind. The path is confusing.", reward: 10, costEnergy: 1, weatherChange: 'fog' }
       ],
       nextNodes: ['income_valley']

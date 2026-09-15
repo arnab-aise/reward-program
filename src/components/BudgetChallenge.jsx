@@ -2,132 +2,147 @@ import React, { useState } from 'react';
 import gsap from 'gsap';
 import { useAudio } from '../hooks/useAudio';
 import { useGameStore } from '../store/useGameStore';
+import { createBudget } from '../services/financeService';
 
 export const BudgetChallenge = ({ onComplete }) => {
   const { playSFX } = useAudio();
-  const { financialData } = useGameStore();
+  const { employeeId } = useGameStore();
   
-  // Get real income, default to 4000 if not available
-  const realIncome = financialData?.income || 4000;
-  
-  // Round to nearest 100 for the mini-game mechanics
-  const income = Math.max(1000, Math.round(realIncome / 100) * 100);
-  
-  const targetNeeds = income * 0.50; // 50%
-  const targetWants = income * 0.30; // 30%
-  const targetSavings = income * 0.20; // 20%
-  
-  const [allocated, setAllocated] = useState({ needs: 0, wants: 0, savings: 0 });
-  const stepAmount = Math.round(income * 0.05); // 5% of income ensures 50%, 30%, and 20% are always perfectly reachable (10, 6, and 4 clicks respectively)
+  const [formData, setFormData] = useState({
+    name: 'Mountain Expedition Fund',
+    amount: '500',
+    category: 'savings_investments',
+    frequency: 'monthly',
+    threshold: '80'
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
-  const totalAllocated = allocated.needs + allocated.wants + allocated.savings;
-  const remaining = income - totalAllocated;
-
-  const handleAllocate = (category, amount) => {
-    playSFX('thud');
-    
-    setAllocated(prev => {
-      // Prevent going below zero for a category
-      if (prev[category] + amount < 0) return prev;
-      
-      // Calculate current total from latest state
-      const currentTotal = prev.needs + prev.wants + prev.savings;
-      const currentRemaining = income - currentTotal;
-      
-      // Prevent over-allocating total income
-      if (currentRemaining - amount < 0 && amount > 0) return prev;
-      
-      return { ...prev, [category]: prev[category] + amount };
-    });
-    
-    // UI Juice
-    gsap.fromTo(`.val-${category}`, 
-      { scale: 1.3, color: '#fbbf24' }, 
-      { scale: 1, color: '#f8fafc', duration: 0.3 }
-    );
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     playSFX('thud');
-    if (allocated.needs !== targetNeeds) {
-      alert(`The 50/30/20 rule requires exactly $${targetNeeds} allocated to Needs!`);
+    
+    if (!formData.name || !formData.amount || !formData.category || !formData.threshold) {
+      setError('Please fill out all fields.');
       return;
     }
-    if (allocated.wants > targetWants) {
-      alert(`The 50/30/20 rule allows a maximum of $${targetWants} for Wants!`);
-      return;
-    }
-    if (allocated.savings < targetSavings) {
-      alert(`The 50/30/20 rule requires at least $${targetSavings} allocated to Savings/Debt!`);
-      return;
-    }
-    if (remaining > 0) {
-      alert(`Allocate all $${income} of your monthly income!`);
+    
+    setIsSubmitting(true);
+    setError('');
+    
+    // Auto-calculate start/end of current month for monthly frequency
+    const now = new Date();
+    const startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+    const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+
+    const payload = {
+      name: formData.name,
+      amount: Number(formData.amount),
+      category: formData.category,
+      frequency: formData.frequency,
+      threshold: Number(formData.threshold),
+      startDate,
+      endDate
+    };
+
+    // If no employee ID is present (playing locally/testing without auth), just pass the challenge
+    if (!employeeId) {
+      setTimeout(() => {
+        gsap.to('.budget-container', { scale: 0.9, opacity: 0, duration: 0.3, onComplete: () => onComplete(payload) });
+      }, 500);
       return;
     }
 
-    gsap.to('.budget-container', { scale: 0.9, opacity: 0, duration: 0.3, onComplete: () => onComplete(allocated) });
+    const res = await createBudget(employeeId, payload);
+    setIsSubmitting(false);
+
+    if (res.error) {
+      setError(res.error);
+    } else {
+      gsap.to('.budget-container', { scale: 0.9, opacity: 0, duration: 0.3, onComplete: () => onComplete(payload) });
+    }
   };
 
   return (
-    <div className="vn-dialogue-container">
+    <div className="vn-dialogue-container budget-container">
       <div className="vn-dialogue-box speaker-sherpa">
         <div className="vn-speaker-badge sherpa">Sherpa</div>
         <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflowY: 'auto', paddingRight: '10px' }}>
           
-          <div className="vn-challenge-header">Take Home: 50/30/20 Planner</div>
-          <div className="vn-challenge-desc">Use Take Home's framework to budget your ${income} Monthly Income.</div>
+          <div className="vn-challenge-header">Take Home Budget Planner</div>
+          <div className="vn-challenge-desc" style={{ marginBottom: '15px' }}>
+            Set a goal to protect your ascent. This will securely save a budget in your Take Home account.
+          </div>
           
-          <div className="vn-challenge-row">
-            <span style={{fontSize: '18px'}}>Unallocated Cash:</span>
-            <span style={{fontSize: '24px', fontWeight: 'bold', color: remaining === 0 ? '#4ade80' : '#fbbf24'}}>
-              ${remaining}
-            </span>
-          </div>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            {error && <div style={{ color: '#ef4444', fontWeight: 'bold' }}>{error}</div>}
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+              <label style={{ color: '#94a3b8', fontSize: '14px' }}>Budget Name</label>
+              <input 
+                type="text" 
+                name="name" 
+                value={formData.name} 
+                onChange={handleChange}
+                style={{ padding: '8px', borderRadius: '4px', border: 'none', background: '#334155', color: 'white' }}
+              />
+            </div>
 
-          <div className="vn-challenge-row">
-            <div>
-              <div style={{fontWeight: 'bold', fontSize: '18px', color: '#fff'}}>Needs (50%)</div>
-              <div style={{fontSize: '12px', color: '#94a3b8'}}>Housing, Groceries, Bills (Target: ${targetNeeds})</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+              <label style={{ color: '#94a3b8', fontSize: '14px' }}>Category</label>
+              <select 
+                name="category" 
+                value={formData.category} 
+                onChange={handleChange}
+                style={{ padding: '8px', borderRadius: '4px', border: 'none', background: '#334155', color: 'white' }}
+              >
+                <option value="savings_investments">Savings & Investments</option>
+                <option value="housing">Housing</option>
+                <option value="food_dining">Food & Dining</option>
+                <option value="transportation">Transportation</option>
+                <option value="shopping">Shopping</option>
+                <option value="entertainment">Entertainment</option>
+              </select>
             </div>
-            <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
-              <button style={{background: '#334155', color: '#fff', border: 'none', borderRadius: '4px', width: '30px', height: '30px', cursor: 'pointer', fontSize: '18px', fontWeight: 'bold'}} onClick={() => handleAllocate('needs', -stepAmount)}>-</button>
-              <span className="val-needs" style={{fontSize: '20px', width: '60px', textAlign: 'center', color: '#fff'}}>${allocated.needs}</span>
-              <button style={{background: '#334155', color: '#fff', border: 'none', borderRadius: '4px', width: '30px', height: '30px', cursor: 'pointer', fontSize: '18px', fontWeight: 'bold'}} onClick={() => handleAllocate('needs', stepAmount)}>+</button>
-            </div>
-          </div>
 
-          <div className="vn-challenge-row">
-            <div>
-              <div style={{fontWeight: 'bold', fontSize: '18px', color: '#fff'}}>Wants (30%)</div>
-              <div style={{fontSize: '12px', color: '#94a3b8'}}>Entertainment, Dining (Max: ${targetWants})</div>
+            <div style={{ display: 'flex', gap: '15px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 }}>
+                <label style={{ color: '#94a3b8', fontSize: '14px' }}>Amount ($)</label>
+                <input 
+                  type="number" 
+                  name="amount" 
+                  value={formData.amount} 
+                  onChange={handleChange}
+                  min="1"
+                  style={{ padding: '8px', borderRadius: '4px', border: 'none', background: '#334155', color: 'white' }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 }}>
+                <label style={{ color: '#94a3b8', fontSize: '14px' }}>Alert Threshold (%)</label>
+                <input 
+                  type="number" 
+                  name="threshold" 
+                  value={formData.threshold} 
+                  onChange={handleChange}
+                  min="1" max="100"
+                  style={{ padding: '8px', borderRadius: '4px', border: 'none', background: '#334155', color: 'white' }}
+                />
+              </div>
             </div>
-            <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
-              <button style={{background: '#334155', color: '#fff', border: 'none', borderRadius: '4px', width: '30px', height: '30px', cursor: 'pointer', fontSize: '18px', fontWeight: 'bold'}} onClick={() => handleAllocate('wants', -stepAmount)}>-</button>
-              <span className="val-wants" style={{fontSize: '20px', width: '60px', textAlign: 'center', color: '#fff'}}>${allocated.wants}</span>
-              <button style={{background: '#334155', color: '#fff', border: 'none', borderRadius: '4px', width: '30px', height: '30px', cursor: 'pointer', fontSize: '18px', fontWeight: 'bold'}} onClick={() => handleAllocate('wants', stepAmount)}>+</button>
-            </div>
-          </div>
 
-          <div className="vn-challenge-row">
-            <div>
-              <div style={{fontWeight: 'bold', fontSize: '18px', color: '#fff'}}>Savings & Debt (20%)</div>
-              <div style={{fontSize: '12px', color: '#94a3b8'}}>Emergency Fund, Investments (Target: ${targetSavings})</div>
-            </div>
-            <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
-              <button style={{background: '#334155', color: '#fff', border: 'none', borderRadius: '4px', width: '30px', height: '30px', cursor: 'pointer', fontSize: '18px', fontWeight: 'bold'}} onClick={() => handleAllocate('savings', -stepAmount)}>-</button>
-              <span className="val-savings" style={{fontSize: '20px', width: '60px', textAlign: 'center', color: '#fff'}}>${allocated.savings}</span>
-              <button style={{background: '#334155', color: '#fff', border: 'none', borderRadius: '4px', width: '30px', height: '30px', cursor: 'pointer', fontSize: '18px', fontWeight: 'bold'}} onClick={() => handleAllocate('savings', stepAmount)}>+</button>
-            </div>
-          </div>
-
-          <button 
-            className="vn-continue-btn"
-            style={{ opacity: (remaining === 0 && allocated.needs === targetNeeds && allocated.savings >= targetSavings) ? 1 : 0.5, marginTop: '20px', width: '100%', textAlign: 'center' }} 
-            onClick={handleSubmit}
-          >
-            Save Take Home Budget
-          </button>
+            <button 
+              type="submit"
+              className="vn-continue-btn"
+              disabled={isSubmitting}
+              style={{ marginTop: '10px', width: '100%', textAlign: 'center', opacity: isSubmitting ? 0.5 : 1 }} 
+            >
+              {isSubmitting ? 'Securing rope...' : 'Create Take Home Budget'}
+            </button>
+          </form>
 
         </div>
       </div>

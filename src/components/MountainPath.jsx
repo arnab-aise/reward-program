@@ -10,7 +10,7 @@ export const MountainPath = () => {
   const { 
     unlockedNodes, completedNodes, activeStageModal, 
     openStageModal, energy, deductEnergy, triggerCollapse,
-    setShowShop, inventory, setSherpaMessage
+    showShop, setShowShop, inventory, setSherpaMessage
   } = useGameStore();
   const { playSFX } = useAudio();
   const [scrollY, setScrollY] = useState(0);
@@ -241,28 +241,10 @@ export const MountainPath = () => {
       </div>
 
       {/* Floating Shop Button */}
-      {(activeCheckpoint.id === 'base_camp' || activeCheckpoint.id === 'savings_camp') && (
+      {(activeCheckpoint.id === 'base_camp' || activeCheckpoint.id === 'savings_camp') && !showShop && (
         <button
           onClick={() => setShowShop(true)}
-          style={{
-            position: 'fixed',
-            bottom: '15px',
-            right: '15px',
-            background: 'linear-gradient(to right, #0f766e, #0d9488)',
-            border: '2px solid #5eead4',
-            borderRadius: '50px',
-            padding: '0.4rem 0.8rem',
-            color: 'white',
-            fontWeight: 'bold',
-            fontSize: '0.8rem',
-            fontFamily: "'Rowdies', cursive",
-            cursor: 'pointer',
-            boxShadow: '0 5px 10px -2px rgba(0, 0, 0, 0.5), 0 0 10px rgba(94, 234, 212, 0.3)',
-            zIndex: 100,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '5px'
-          }}
+          className="sherpa-shop-btn"
         >
           <span style={{ fontSize: '1rem' }}>⛺</span> Sherpa Shop
         </button>
