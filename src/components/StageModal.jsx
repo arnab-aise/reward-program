@@ -4,6 +4,7 @@ import gsap from 'gsap';
 import { DialogueScreen } from './DialogueScreen';
 import { BudgetChallenge } from './BudgetChallenge';
 import { DebtChallenge } from './DebtChallenge';
+import { PlaidLinkChallenge } from './PlaidLinkChallenge';
 import { TypewriterText } from './TypewriterText';
 import './ConversationalUI.css';
 import { SherpaChat } from './SherpaChat';
@@ -11,7 +12,7 @@ import { useAudio } from '../hooks/useAudio';
 import { formatCurrency } from '../hooks/useFinancialData';
 
 export const StageModal = () => {
-  const { activeStageModal, closeStageModal, completeNode, energy, inventory, addTool, setSherpaMessage, setBudgetCreated, setDebtStrategy, setWeatherState, financialData } = useGameStore();
+  const { activeStageModal, closeStageModal, completeNode, energy, inventory, addTool, setSherpaMessage, setBudgetCreated, setDebtStrategy, setWeatherState, financialData, hasNoData, employeeId, recommendedBranch, computeStageWeather } = useGameStore();
   const { playSFX } = useAudio();
   const [encounterState, setEncounterState] = useState('dialogue'); // 'dialogue', 'sherpa_chat', 'intro', 'challenge', 'resolution'
   const [outcome, setOutcome] = useState(null);
@@ -19,8 +20,18 @@ export const StageModal = () => {
   useEffect(() => {
     if (activeStageModal !== null) {
       setEncounterState('dialogue');
+      // Compute weather for THIS specific stage
+      computeStageWeather(activeStageModal, financialData, inventory);
     }
   }, [activeStageModal]);
+
+  const hasData = !hasNoData;
+
+  useEffect(() => {
+    if (encounterState === 'loading_snapshot' && hasData) {
+      setEncounterState('dialogue');
+    }
+  }, [hasData, encounterState]);
 
   if (activeStageModal === null) return null;
 
@@ -37,94 +48,59 @@ export const StageModal = () => {
   const totalBudget = fd.totalBudget || 0;
   const totalSpent = fd.totalSpent || 0;
   const salaryBillRatio = fd.salaryBillRatio || 0;
-  const hasData = !!financialData;
+
+  const handlePlaidComplete = () => {
+    // Dispatch an event that App.jsx can listen to, or we can just tell the user to refresh if refetch is hard to pass
+    // Better: let's dispatch a custom event that App.jsx / useFinancialData can listen to.
+    window.dispatchEvent(new Event('refetchFinancialData'));
+    
+    // We can also transition to 'sherpa_chat' temporarily while it loads
+    setEncounterState('loading_snapshot');
+  };
 
   // --- Build Dynamic Encounters ---
   const encounters = {
     base_camp: {
-      title: "Base Camp: Take Home Snapshot",
+      title: "Base Camp: Bank Connection & Snapshot",
       script: [
         { speaker: "Sherpa", text: hasData
-          ? `Welcome, climber. Your current income is ${formatCurrency(income)}. Take Home has mapped your financial terrain.`
-          : "Welcome to the Financial Ascent. The mountain is treacherous, but the Take Home platform will be your guide." },
-        { speaker: "You", text: "I'm ready. Where do we begin?" },
+          ? "Welcome back to Base Camp. The Take Home platform has securely mapped your financial terrain."
+          : "Welcome to the Financial Ascent. To map your terrain, you must first securely connect your bank account." },
+        { speaker: "You", text: hasData ? "I'm ready. Where do we begin?" : "How do I do that?" },
         { speaker: "Sherpa", text: hasData
-          ? `Your current month bills total ${formatCurrency(totalBills)}, leaving you with ${formatCurrency(tdi)} in true discretionary income. Let's start climbing.`
-          : "First, you must understand your current position. Take this compass and use Take Home's Wellness Dashboard." }
+          ? "The path ahead is clear. We will head to The Lookout to analyze your current standing."
+          : "Use this secure portal to connect your bank. Once connected, we will reveal your Snapshot Summary." }
       ],
       desc: hasData
-        ? `Your Take Home snapshot shows ${formatCurrency(income)} income and ${formatCurrency(totalBills)} in current month bills (including those already paid).`
-        : "Take Home's Wellness Dashboard takes a complete snapshot of your financial health.",
-      options: [
-        { text: "Review Snapshot & Climb", resultText: hasData ? `Baseline established: ${formatCurrency(tdi)} true disposable income.` : "You have securely established your financial baseline.", reward: 50, toolGained: 'financial_compass', weatherChange: 'sunrise' },
-        { text: "Climb without a Dashboard", resultText: "You are climbing blind. The path is confusing.", reward: 10, costEnergy: 1, weatherChange: 'fog' }
+        ? "Your financial baseline is established and secure. It's time to begin the ascent."
+        : "Connect your bank account to generate your Snapshot Summary.",
+      options: hasData ? [
+        { text: "Continue the Climb", resultText: "Your journey begins.", reward: 50, toolGained: 'financial_compass', weatherChange: 'sunrise' },
+      ] : [
+        { text: "Connect Bank Account", action: 'start_plaid' }
       ],
-      nextNodes: ['income_valley']
+      nextNodes: ['snapshot_summary']
     },
 
-    income_valley: {
-      title: "Stage 2: Cash Flow Tracking",
-      script: (() => {
-        if (hasData && incomeTrend === 'up') {
-          return [
-            { speaker: "Sherpa", text: `Great news! Your income rose from ${formatCurrency(incomeLastMonth)} to ${formatCurrency(incomeThisMonth)}. The wind is at our back.` },
-            { speaker: "You", text: "That's encouraging! How do I keep this momentum?" },
-            { speaker: "Sherpa", text: "By tracking every stream in Take Home's Cash Flow tools. Let's secure this advantage." }
-          ];
-        } else if (hasData && incomeTrend === 'down') {
-          return [
-            { speaker: "Sherpa", text: `Warning, climber. Your income dropped from ${formatCurrency(incomeLastMonth)} to ${formatCurrency(incomeThisMonth)}. The trail has narrowed.` },
-            { speaker: "You", text: "That's concerning. What should I do?" },
-            { speaker: "Sherpa", text: "First, understand where each dollar goes. Take Home's Cash Flow tools will help us find the leak." }
-          ];
-        }
-        return [
-          { speaker: "Sherpa", text: "A river of income flows here. Take Home's Cash Flow tools help you track every drop." },
-          { speaker: "You", text: "How do I make sure none of it slips away?" },
-          { speaker: "Sherpa", text: "By linking your accounts in Take Home. Use this Income Rope to bind them securely." }
-        ];
-      })(),
-      desc: hasData
-        ? `Your income is ${incomeTrend === 'up' ? '📈 trending up' : incomeTrend === 'down' ? '📉 trending down' : '➡️ stable'} (${formatCurrency(incomeThisMonth)} this period).`
-        : "Take Home automatically categorizes and tracks your income streams.",
-      options: (() => {
-        const opts = [
-          { text: "Link Accounts securely (Use Compass)", requires: 'financial_compass', resultText: hasData ? `Take Home is tracking your ${formatCurrency(incomeThisMonth)} income stream.` : "Take Home is now tracking your cash flow beautifully.", reward: incomeTrend === 'up' ? 150 : 100, toolGained: 'income_rope' },
-          { text: "Track manually on paper", resultText: "You lost track of several transactions.", reward: 20, costEnergy: 1, weatherChange: 'fog' }
-        ];
-        if (incomeTrend === 'up') {
-          opts[0].resultText += " 🎉 Income growth bonus!";
-        }
-        return opts;
-      })(),
+    snapshot_summary: {
+      title: "The Lookout",
+      hasChallenge: 'sherpa_chat',
+      script: [
+        { speaker: "Sherpa", text: "We have mapped your financial baseline. The numbers tell a story, but you must ask the right questions to understand it." },
+        { speaker: "You", text: "What does my snapshot say?" }
+      ],
+      desc: "Ask the Sherpa to analyze your financial snapshot.",
+      options: [],
       nextNodes: ['budget_ridge']
     },
-
     budget_ridge: {
-      title: "Stage 3: The 50/30/20 Budget",
-      script: (() => {
-        if (hasData && budgetHealth === 'over_budget') {
-          return [
-            { speaker: "Sherpa", text: `Climber, you've spent ${formatCurrency(totalSpent)} against a budget of ${formatCurrency(totalBudget)}. You are over budget!` },
-            { speaker: "You", text: "That's not good. How do I fix this?" },
-            { speaker: "Sherpa", text: "We must restructure. Take Home uses the 50/30/20 rule to bring you back on track." }
-          ];
-        } else if (hasData && budgetHealth === 'on_track') {
-          return [
-            { speaker: "Sherpa", text: `Excellent discipline! You've spent ${formatCurrency(totalSpent)} of your ${formatCurrency(totalBudget)} budget. You're on track.` },
-            { speaker: "You", text: "That's great to hear!" },
-            { speaker: "Sherpa", text: "Let's refine your 50/30/20 allocation to push even higher." }
-          ];
-        }
-        return [
-          { speaker: "Sherpa", text: "The ridge ahead splits. We must allocate our resources wisely." },
-          { speaker: "You", text: "What is the best way to structure my finances here?" },
-          { speaker: "Sherpa", text: "Take Home uses the 50/30/20 rule. Allocate your monthly income into Needs, Wants, and Savings." }
-        ];
-      })(),
-      desc: hasData
-        ? `Budget Status: ${budgetHealth === 'over_budget' ? '🔴 Over Budget' : budgetHealth === 'on_track' ? '🟢 On Track' : budgetHealth === 'warning' ? '🟡 Warning' : '⚪ No Budget Set'}`
-        : "Use Take Home's budgeting tool to allocate your monthly income securely.",
+      title: "Stage 3: Budget Ridge",
+      script: [
+        { speaker: "Sherpa", text: "Climber, stop! There is a problem on the road ahead." },
+        { speaker: "You", text: "What is it? A storm?" },
+        { speaker: "Sherpa", text: "Worse. A financial black hole. It consumes uncontrolled spending. To get past this obstacle, you must create a budget." }
+      ],
+      desc: "A financial black hole blocks the path. You cannot cross without proper structure.",
       hasChallenge: 'budget',
       nextNodes: ['aggressive_cliff', 'steady_trail']
     },
@@ -296,7 +272,7 @@ export const StageModal = () => {
     if (challengeType === 'budget') {
       setBudgetCreated(true);
       addTool('budget_planner');
-      setOutcome({ resultText: "You successfully built a 50/30/20 Take Home budget!", reward: 150, toolGained: 'budget_planner' });
+      setOutcome({ resultText: "Excellent! You created a budget and successfully crossed this obstacle. We have safely reached Budget Ridge.", reward: 150, toolGained: 'budget_planner' });
       setSherpaMessage("A well-planned Take Home budget is a climber's best rope.");
     } else if (challengeType === 'debt') {
       setDebtStrategy(data);
@@ -306,6 +282,7 @@ export const StageModal = () => {
     }
     setEncounterState('resolution');
   };
+
 
   const handleComplete = () => {
     playSFX('chime');
@@ -335,7 +312,21 @@ export const StageModal = () => {
 
   return (
     <div className="vn-overlay stage-modal-overlay">
-      
+      {encounterState === 'loading_snapshot' && (
+        <div className="vn-dialogue-container">
+          <div className="vn-dialogue-box speaker-sherpa">
+            <div className="vn-speaker-badge sherpa">Sherpa</div>
+            <div className="vn-challenge-desc" style={{ textAlign: 'center', marginTop: '20px' }}>
+              Fetching your Snapshot Summary... <span style={{ animation: 'pulse 1s infinite' }}>🗺️</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {encounterState === 'plaid_link' && (
+        <PlaidLinkChallenge onComplete={handlePlaidComplete} />
+      )}
+
       {encounterState === 'challenge' ? (
         currentEncounter.hasChallenge === 'budget' ? (
           <BudgetChallenge onComplete={(data) => handleChallengeComplete('budget', data)} />

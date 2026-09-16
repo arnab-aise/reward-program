@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import gsap from 'gsap';
 
-export const Checkpoint = ({ cx, cy, label, id, isUnlocked, isCurrent }) => {
+export const Checkpoint = ({ cx, cy, label, id, isUnlocked, isCurrent, isRecommended }) => {
   const { openStageModal, nodeStars } = useGameStore();
   const nodeRef = useRef(null);
   const pulseRef = useRef(null);
@@ -10,6 +10,7 @@ export const Checkpoint = ({ cx, cy, label, id, isUnlocked, isCurrent }) => {
   
   const stars = nodeStars[id] || 0;
   const isLocked = !isUnlocked && !isCurrent;
+  const recommendRef = useRef(null);
 
   useEffect(() => {
     if (isCurrent) {
@@ -40,7 +41,18 @@ export const Checkpoint = ({ cx, cy, label, id, isUnlocked, isCurrent }) => {
         ease: "sine.inOut"
       });
     }
-  }, [isCurrent, isLocked]);
+
+    // Recommended branch glow pulse
+    if (isRecommended && recommendRef.current) {
+      gsap.to(recommendRef.current, {
+        scale: 1.6,
+        opacity: 0,
+        duration: 2,
+        repeat: -1,
+        ease: "sine.out"
+      });
+    }
+  }, [isCurrent, isLocked, isRecommended]);
 
   const handleClick = () => {
     if (isLocked) return;
@@ -89,6 +101,16 @@ export const Checkpoint = ({ cx, cy, label, id, isUnlocked, isCurrent }) => {
         />
       )}
 
+      {/* Recommended Branch Pulse */}
+      {isRecommended && (
+        <circle 
+          ref={recommendRef}
+          cx="0" cy="0" r="38" 
+          fill="none" stroke="#4ade80" strokeWidth="4" 
+          opacity="0.8"
+        />
+      )}
+
       <g ref={nodeRef}>
         <g ref={crystalRef}>
           {/* Floating Glowing Crystal */}
@@ -134,6 +156,14 @@ export const Checkpoint = ({ cx, cy, label, id, isUnlocked, isCurrent }) => {
         <text x="0" y="52" textAnchor="middle" fill="#f8fafc" fontSize="13" fontWeight="bold" fontFamily="sans-serif">
           {label}
         </text>
+
+        {/* Recommended Star Badge */}
+        {isRecommended && (
+          <g transform="translate(40, -35)">
+            <circle cx="0" cy="0" r="14" fill="#16a34a" stroke="#4ade80" strokeWidth="2" />
+            <text x="0" y="5" textAnchor="middle" fontSize="14">⭐</text>
+          </g>
+        )}
       </g>
     </g>
   );

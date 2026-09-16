@@ -132,48 +132,43 @@ export function useFinancialData(employeeId) {
   const [error, setError] = useState(null);
   const [hasNoData, setHasNoData] = useState(false);
 
-  useEffect(() => {
+  const load = useCallback(async () => {
     if (!employeeId) {
       setIsLoading(false);
       return;
     }
 
-    let cancelled = false;
+    setIsLoading(true);
+    setError(null);
+    setHasNoData(false);
 
-    async function load() {
-      setIsLoading(true);
-      setError(null);
-      setHasNoData(false);
+    const result = await fetchSnapshot(employeeId);
 
-      const result = await fetchSnapshot(employeeId);
-
-      if (cancelled) return;
-
-      if (result.error) {
-        if (result.error === 'NO_DATA') {
-          setHasNoData(true);
-        } else {
-          setError(result.error);
-        }
-        setIsLoading(false);
-        return;
-      }
-
-      const snapshot = result.data?.snapshot;
-      if (!snapshot) {
+    if (result.error) {
+      if (result.error === 'NO_DATA') {
         setHasNoData(true);
-        setIsLoading(false);
-        return;
+      } else {
+        setError(result.error);
       }
-
-      setRawSnapshot(snapshot);
-      setMetrics(deriveMetrics(snapshot));
       setIsLoading(false);
+      return;
     }
 
-    load();
-    return () => { cancelled = true; };
+    const snapshot = result.data?.snapshot;
+    if (!snapshot) {
+      setHasNoData(true);
+      setIsLoading(false);
+      return;
+    }
+
+    setRawSnapshot(snapshot);
+    setMetrics(deriveMetrics(snapshot));
+    setIsLoading(false);
   }, [employeeId]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   // Wrapper around the chatbot API
   const askSherpaQuestion = useCallback(async (question) => {
@@ -186,6 +181,7 @@ export function useFinancialData(employeeId) {
     isLoading,
     error,
     hasNoData,
+    refetch: load,
     askSherpa: askSherpaQuestion,
   };
 }

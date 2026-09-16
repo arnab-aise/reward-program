@@ -10,7 +10,8 @@ export const MountainPath = () => {
   const { 
     unlockedNodes, completedNodes, activeStageModal, 
     openStageModal, energy, deductEnergy, triggerCollapse,
-    showShop, setShowShop, inventory, setSherpaMessage
+    showShop, setShowShop, inventory, setSherpaMessage,
+    weatherState, recommendedBranch
   } = useGameStore();
   const { playSFX } = useAudio();
   const [scrollY, setScrollY] = useState(0);
@@ -18,7 +19,7 @@ export const MountainPath = () => {
 
   const checkpoints = {
     base_camp: { id: 'base_camp', label: "Base Camp", cx: 500, cy: 2200 },
-    income_valley: { id: 'income_valley', label: "Income Valley", cx: 200, cy: 1900 },
+    snapshot_summary: { id: 'snapshot_summary', label: "The Lookout", cx: 200, cy: 1900 },
     budget_ridge: { id: 'budget_ridge', label: "Budget Ridge", cx: 750, cy: 1600 },
     aggressive_cliff: { id: 'aggressive_cliff', label: "Aggressive Cliff", cx: 250, cy: 1300 },
     steady_trail: { id: 'steady_trail', label: "Steady Trail", cx: 800, cy: 1300 },
@@ -28,8 +29,8 @@ export const MountainPath = () => {
   };
 
   const nodeRoutes = {
-    'base_camp->income_valley': `M 500 2200 C 500 2050, 200 2100, 200 1900`,
-    'income_valley->budget_ridge': `M 200 1900 C 200 1750, 750 1800, 750 1600`,
+    'base_camp->snapshot_summary': `M 500 2200 C 500 2050, 200 2100, 200 1900`,
+    'snapshot_summary->budget_ridge': `M 200 1900 C 200 1750, 750 1800, 750 1600`,
     'budget_ridge->aggressive_cliff': `M 750 1600 C 750 1450, 250 1450, 250 1300`,
     'budget_ridge->steady_trail': `M 750 1600 C 750 1450, 800 1450, 800 1300`,
     'aggressive_cliff->debt_avalanche': `M 250 1300 C 250 1150, 500 1150, 500 1000`,
@@ -201,10 +202,17 @@ export const MountainPath = () => {
                     return;
                   }
 
-                  // Determine energy cost
+                  // Determine energy cost (adjusted by weather)
                   const highAltitude = ['debt_avalanche', 'savings_camp', 'summit'].includes(cp.id);
                   let cost = highAltitude ? 2 : 1;
                   if (highAltitude && inventory.includes('grip_boots')) cost -= 1;
+                  
+                  // Weather-based energy adjustments
+                  if (weatherState === 'storm') {
+                    cost += 1; // Storm: +1 energy everywhere
+                  } else if (weatherState === 'fog' && highAltitude) {
+                    cost += 1; // Fog: +1 energy at high altitude only
+                  }
                   
                   if (energy < cost) {
                     triggerCollapse();
@@ -224,6 +232,7 @@ export const MountainPath = () => {
                     id={cp.id}
                     isCurrent={isCurrent}
                     isUnlocked={isUnlocked || completedNodes.includes(cp.id)}
+                    isRecommended={recommendedBranch === cp.id}
                   />
                 </g>
               );

@@ -52,7 +52,7 @@ function App() {
   }, [token]);
 
   // Fetch financial data
-  const { metrics, rawSnapshot, isLoading: isFinanceLoading, hasNoData, error: financeError, askSherpa } = useFinancialData(employeeId);
+  const { metrics, rawSnapshot, isLoading: isFinanceLoading, hasNoData, error: financeError, askSherpa, refetch } = useFinancialData(employeeId);
 
   // Store employeeId and financial data in game store when available
   useEffect(() => {
@@ -61,6 +61,17 @@ function App() {
     }
   }, [employeeId, setEmployeeId]);
 
+  // Listen for the custom refetch event
+  useEffect(() => {
+    const handleRefetch = () => {
+      refetch();
+    };
+    window.addEventListener('refetchFinancialData', handleRefetch);
+    return () => {
+      window.removeEventListener('refetchFinancialData', handleRefetch);
+    };
+  }, [refetch]);
+
   useEffect(() => {
     useGameStore.getState().setFinanceStatus(isFinanceLoading, hasNoData);
   }, [isFinanceLoading, hasNoData]);
@@ -68,6 +79,9 @@ function App() {
   useEffect(() => {
     if (metrics && rawSnapshot) {
       setFinancialData(metrics, rawSnapshot);
+      // Compute initial weather for base_camp and recommended branch
+      useGameStore.getState().computeStageWeather('base_camp', metrics, useGameStore.getState().inventory);
+      useGameStore.getState().computeRecommendedBranch(metrics);
     }
   }, [metrics, rawSnapshot, setFinancialData]);
 
@@ -108,7 +122,7 @@ function App() {
             Dev
           </button>
 
-          {showDebug && <DebugPanel />}
+          {showDebug && <DebugPanel onClose={() => setShowDebug(false)} />}
         </div>
       </div>
     </ErrorBoundary>

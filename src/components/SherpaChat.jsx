@@ -67,42 +67,90 @@ export const SherpaChat = ({ onClose, stageId }) => {
     let options = [];
     
     switch (stageId) {
-      case 'base_camp':
+      case 'snapshot_summary':
         options = [
-          { label: '📷 Snapshot summary', question: 'Give me a summary of my financial snapshot. Make sure to explicitly list my total current month bills (and mention that this includes bills I have already paid).' },
-          { label: '⚠️ Biggest risk', question: 'What is my biggest financial risk right now?' }
+          { 
+            label: '📷 Snapshot summary', 
+            playerText: "I'd like to understand my overall financial snapshot.",
+            question: 'Give me a summary of my financial snapshot. Make sure to explicitly list my total current month bills (and mention that this includes bills I have already paid).' 
+          },
+          { 
+            label: '⚠️ Biggest risk', 
+            playerText: "Can you tell me what my biggest financial risk is right now?",
+            question: 'What is my biggest financial risk right now?' 
+          }
         ];
         break;
-      case 'income_valley':
+      case 'income_valley': // Fallback if Income Valley still exists somewhere
         options = [
-          { label: '📈 Income trends', question: 'How much income do I have this month compared to last?' },
-          { label: '💡 Diversify income', question: 'How can I diversify or increase my income streams?' }
+          { 
+            label: '📈 Income trends', 
+            playerText: "I want to know how my income this month compares to last month.",
+            question: 'How much income do I have this month compared to last?' 
+          },
+          { 
+            label: '💡 Diversify income', 
+            playerText: "What are some ways I could diversify or increase my income?",
+            question: 'How can I diversify or increase my income streams?' 
+          }
         ];
         break;
       case 'budget_ridge':
         options = [
-          { label: '🔍 Check overspending', question: 'Am I overspending in any specific category?' },
-          { label: '⚖️ 50/30/20 Rule', question: 'How do I apply the 50/30/20 rule to my income?' }
+          { 
+            label: '🔍 Check overspending', 
+            playerText: "I want to know more about my spending. Am I going over budget anywhere?",
+            question: 'Am I overspending in any specific category?' 
+          },
+          { 
+            label: '⚖️ 50/30/20 Rule', 
+            playerText: "Could you explain how I should apply the 50/30/20 rule to my budget?",
+            question: 'How do I apply the 50/30/20 rule to my income?' 
+          }
         ];
         break;
       case 'aggressive_cliff':
       case 'steady_trail':
       case 'debt_avalanche':
         options = [
-          { label: '🚨 Overdue bills', question: 'What are my current overdue or high-interest bills?' },
-          { label: '❄️ Avalanche vs Snowball', question: 'Explain the Avalanche vs. Snowball method for paying debt.' }
+          { 
+            label: '🚨 Overdue bills', 
+            playerText: "I'm worried about my bills. Which ones are overdue or have high interest?",
+            question: 'What are my current overdue or high-interest bills?' 
+          },
+          { 
+            label: '❄️ Avalanche vs Snowball', 
+            playerText: "Can you help me understand the difference between the Avalanche and Snowball methods?",
+            question: 'Explain the Avalanche vs. Snowball method for paying debt.' 
+          }
         ];
         break;
       case 'savings_camp':
         options = [
-          { label: '💰 Discretionary income', question: 'How much true discretionary income do I have to save?' },
-          { label: '🛡️ Emergency fund', question: 'What is an ideal emergency fund size for my situation?' }
+          { 
+            label: '💰 Discretionary income', 
+            playerText: "I want to focus on saving. How much true discretionary income do I have available?",
+            question: 'How much true discretionary income do I have to save?' 
+          },
+          { 
+            label: '🛡️ Emergency fund', 
+            playerText: "What should be my target for an emergency fund right now?",
+            question: 'What is an ideal emergency fund size for my situation?' 
+          }
         ];
         break;
       default:
         options = [
-          { label: '📊 Understand my income', question: 'How much income do I have this month and how does it compare to last month?' },
-          { label: '💰 Improve my savings', question: 'How can I save more money based on my current financial situation?' },
+          { 
+            label: '📊 Understand my income', 
+            playerText: "I'd like to understand my income situation better.",
+            question: 'How much income do I have this month and how does it compare to last month?' 
+          },
+          { 
+            label: '💰 Improve my savings', 
+            playerText: "Can you give me some advice on how to improve my savings?",
+            question: 'How can I save more money based on my current financial situation?' 
+          },
         ];
         break;
     }
@@ -126,7 +174,10 @@ export const SherpaChat = ({ onClose, stageId }) => {
     // Switch to Player speaking
     setShowOptions(false);
     setActiveSpeaker('player');
-    setActiveMessage(option.label.replace(/^[^\s]+\s/, ''));
+    
+    // Use the custom conversational text if provided, otherwise fallback to stripping the emoji from the label
+    setActiveMessage(option.playerText || option.label.replace(/^[^\s]+\s/, ''));
+    
     setHasAskedQuestion(true);
     
     // Add a slight delay before calling API to let user read their own question
