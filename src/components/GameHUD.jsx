@@ -4,7 +4,7 @@ import { useAudio } from '../hooks/useAudio';
 import gsap from 'gsap';
 
 export const GameHUD = () => {
-  const { coins, energy, currentLevel, inventory } = useGameStore();
+  const { coins, energy, currentLevel, inventory, playerName } = useGameStore();
   const { playSFX } = useAudio();
 
   const toolImages = {
@@ -132,7 +132,7 @@ export const GameHUD = () => {
       <div style={styles.profileBadge}>
         <div style={styles.avatar}></div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={styles.levelText}>LVL {currentLevel + 1}</div>
+          <div style={styles.levelText}>{playerName}</div>
           <div style={{
             color: '#94a3b8',
             fontFamily: "'Nunito', sans-serif",

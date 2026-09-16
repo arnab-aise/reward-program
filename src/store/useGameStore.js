@@ -26,6 +26,7 @@ const initialState = {
   debtStrategyChosen: null,
   savingsTarget: 0,
   recommendedBranch: null, // 'aggressive_cliff' | 'steady_trail' | null
+  playerName: 'Climber', // Default player name
 };
 
 export const useGameStore = create((set) => ({
@@ -36,6 +37,8 @@ export const useGameStore = create((set) => ({
   setSherpaMessage: (msg) => set({ sherpaMessage: msg }),
 
   setEmployeeId: (id) => set({ employeeId: id }),
+  
+  setPlayerName: (name) => set({ playerName: name }),
 
   setFinancialData: (metrics, snapshot) => set({ financialData: metrics, rawSnapshot: snapshot }),
   setFinanceStatus: (isLoading, hasNoData) => set({ isFinanceLoading: isLoading, hasNoData: hasNoData }),

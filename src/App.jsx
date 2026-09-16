@@ -35,12 +35,16 @@ class ErrorBoundary extends React.Component {
 
 function App() {
   const [showDebug, setShowDebug] = useState(false);
-  const { setEmployeeId, setFinancialData } = useGameStore();
+  const { setEmployeeId, setFinancialData, setPlayerName, setFinanceStatus } = useGameStore();
 
-  // Extract employeeId and token from URL query params
+  // Extract parameters from URL query
   const urlParams = new URLSearchParams(window.location.search);
   const employeeId = urlParams.get('employeeId') || urlParams.get('userId') || 'demo-employee-id';
   const token = urlParams.get('token');
+  const rawName = urlParams.get('name') || urlParams.get('firstName') || 'Climber';
+  
+  // Extract only the first name if a full name is provided
+  const firstName = rawName.split(' ')[0];
 
   // If a token is provided in the URL, save it to localStorage for API calls
   useEffect(() => {
@@ -58,8 +62,10 @@ function App() {
   useEffect(() => {
     if (employeeId) {
       setEmployeeId(employeeId);
+      setPlayerName(firstName);
     }
-  }, [employeeId, setEmployeeId]);
+    setFinanceStatus(isFinanceLoading, hasNoData);
+  }, [employeeId, firstName, isFinanceLoading, hasNoData, setEmployeeId, setPlayerName, setFinanceStatus]);
 
   // Listen for the custom refetch event
   useEffect(() => {
